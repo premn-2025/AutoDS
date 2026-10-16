@@ -1,0 +1,92 @@
+# Ignore Python artifacts
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+
+# Distribution / packaging
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Virtual environment
+venv/
+ENV/
+env/
+.venv/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# Jupyter Notebook
+.ipynb_checkpoints/
+
+# Environment files
+.env
+.env.local
+.env.*.local
+
+# Logs
+logs/
+*.log
+
+# Test artifacts
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+.nox/
+
+# MyPy
+.mypy_cache/
+
+# Model artifacts (large files)
+models/*.pkl
+models/*.joblib
+*.h5
+*.pt
+*.pth
+
+# Data files
+data/*.csv
+data/*.xlsx
+data/*.parquet
+*.csv
+*.xlsx
+
+# Bundled sample datasets (used by the web UI sample buttons and demos)
+!data/iris_sample.csv
+!data/housing_sample.csv
+!data/housing_realistic.csv
+!data/iris_messy.csv
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Secrets
+secrets/
+*.pem
+*.key
+
+# Temporary files
+tmp/
+temp/
+*.tmp

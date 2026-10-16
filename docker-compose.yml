@@ -1,0 +1,30 @@
+# Docker Compose for local development
+version: '3.8'
+
+services:
+  # AutoDS Pipeline API
+  autods-pipeline:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: autods-pipeline
+    ports:
+      - "8080:8080"
+    environment:
+      - ENVIRONMENT=development
+      - FLASK_DEBUG=true
+      - GOOGLE_CLOUD_PROJECT=${GOOGLE_CLOUD_PROJECT:-}
+      - GEMINI_API_KEY=${GEMINI_API_KEY:-}
+    volumes:
+      - ./data:/app/data:ro
+      - upload_data:/tmp/autods_uploads
+    networks:
+      - autods-network
+    restart: unless-stopped
+
+volumes:
+  upload_data:
+
+networks:
+  autods-network:
+    driver: bridge

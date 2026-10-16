@@ -1,0 +1,106 @@
+# AutoDS Pipeline Configuration
+# Production-ready settings for AI-powered data science pipeline
+
+pipeline:
+  name: "autods-pipeline"
+  version: "1.0.0"
+  environment: "${ENVIRONMENT:-development}"
+
+# Google Cloud Settings
+google_cloud:
+  project_id: "${GCP_PROJECT_ID:-autods-observability}"
+  region: "${GCP_REGION:-us-central1}"
+  vertex_ai:
+    model_name: "gemini-flash-latest"
+    temperature: 0.7
+    max_output_tokens: 8192
+  storage:
+    bucket: "${GCS_BUCKET:-autods-data}"
+    artifacts_path: "artifacts/"
+    models_path: "models/"
+
+# Logging Settings
+logging:
+  level: "INFO"
+  format: "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+  metrics_prefix: "autods"
+  tags:
+    - "team:ai-engineering"
+    - "product:autods"
+
+# Agent Configuration
+agents:
+  orchestrator:
+    name: "Orchestrator"
+    max_retries: 3
+    timeout: 300
+  
+  data_ingestion:
+    name: "DataIngestion"
+    supported_formats:
+      - ".csv"
+      - ".xlsx"
+      - ".parquet"
+      - ".json"
+    max_file_size_mb: 500
+    sample_size: 10000
+  
+  preprocessing:
+    name: "Preprocessing"
+    missing_value_threshold: 0.3
+    outlier_detection: true
+    auto_feature_engineering: true
+  
+  model_selection:
+    name: "ModelSelection"
+    classification_models:
+      - "random_forest"
+      - "xgboost"
+      - "logistic_regression"
+      - "gradient_boosting"
+    regression_models:
+      - "random_forest"
+      - "xgboost"
+      - "linear_regression"
+      - "gradient_boosting"
+    max_models: 5
+  
+  training:
+    name: "Training"
+    test_size: 0.2
+    cross_validation_folds: 5
+    hyperparameter_tuning: true
+    max_training_time: 600
+  
+  evaluation:
+    name: "Evaluation"
+    classification_metrics:
+      - "accuracy"
+      - "precision"
+      - "recall"
+      - "f1"
+      - "roc_auc"
+    regression_metrics:
+      - "mse"
+      - "rmse"
+      - "mae"
+      - "r2"
+
+# API Settings
+api:
+  host: "0.0.0.0"
+  port: 8080
+  debug: false
+  cors_origins:
+    - "*"
+  rate_limit:
+    enabled: true
+    requests_per_minute: 60
+
+# Alerting Thresholds
+alerting:
+  llm_latency_threshold: 5.0  # seconds
+  pipeline_failure_threshold: 3  # failures in 15 min
+  data_quality_missing_threshold: 20  # percentage
+  cost_threshold_hourly: 50.0  # dollars
+  confidence_threshold: 0.6

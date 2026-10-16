@@ -1,0 +1,67 @@
+# Cloud Run Service Configuration
+# Apply with: gcloud run services replace service.yaml
+
+apiVersion: serving.knative.dev/v1
+kind: Service
+metadata:
+  name: autods-pipeline
+  labels:
+    app: autods-pipeline
+  annotations:
+    run.googleapis.com/ingress: all
+    run.googleapis.com/launch-stage: GA
+spec:
+  template:
+    metadata:
+      annotations:
+        autoscaling.knative.dev/minScale: "0"
+        autoscaling.knative.dev/maxScale: "10"
+        run.googleapis.com/cpu-throttling: "false"
+        run.googleapis.com/execution-environment: gen2
+    spec:
+      containerConcurrency: 80
+      timeoutSeconds: 600
+      serviceAccountName: autods-pipeline-sa@PROJECT_ID.iam.gserviceaccount.com
+      containers:
+        - image: gcr.io/PROJECT_ID/autods-pipeline:latest
+          ports:
+            - containerPort: 8080
+          resources:
+            limits:
+              cpu: "2"
+              memory: 2Gi
+          env:
+            - name: ENVIRONMENT
+              value: production
+            - name: GOOGLE_CLOUD_PROJECT
+              valueFrom:
+                secretKeyRef:
+                  name: gcp-project
+                  key: latest
+            - name: GEMINI_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: gemini-api-key
+                  key: latest
+          startupProbe:
+            httpGet:
+              path: /health
+              port: 8080
+            initialDelaySeconds: 5
+            periodSeconds: 5
+            failureThreshold: 12
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8080
+            periodSeconds: 30
+            failureThreshold: 3
+          readinessProbe:
+            httpGet:
+              path: /ready
+              port: 8080
+            periodSeconds: 10
+            failureThreshold: 3
+  traffic:
+    - percent: 100
+      latestRevision: true

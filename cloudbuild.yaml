@@ -1,0 +1,80 @@
+# Cloud Build configuration for Google Cloud Run deployment
+# Trigger: Push to main branch or manual trigger
+
+steps:
+  # Step 1: Build the container image
+  - name: 'gcr.io/cloud-builders/docker'
+    args:
+      - 'build'
+      - '-t'
+      - 'gcr.io/$PROJECT_ID/autods-pipeline:$COMMIT_SHA'
+      - '-t'
+      - 'gcr.io/$PROJECT_ID/autods-pipeline:latest'
+      - '.'
+    id: 'build-image'
+
+  # Step 2: Push to Container Registry
+  - name: 'gcr.io/cloud-builders/docker'
+    args:
+      - 'push'
+      - 'gcr.io/$PROJECT_ID/autods-pipeline:$COMMIT_SHA'
+    id: 'push-image'
+    waitFor: ['build-image']
+
+  # Step 3: Push latest tag
+  - name: 'gcr.io/cloud-builders/docker'
+    args:
+      - 'push'
+      - 'gcr.io/$PROJECT_ID/autods-pipeline:latest'
+    id: 'push-latest'
+    waitFor: ['build-image']
+
+  # Step 4: Deploy to Cloud Run
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    entrypoint: 'gcloud'
+    args:
+      - 'run'
+      - 'deploy'
+      - 'autods-pipeline'
+      - '--image'
+      - 'gcr.io/$PROJECT_ID/autods-pipeline:$COMMIT_SHA'
+      - '--region'
+      - 'us-central1'
+      - '--platform'
+      - 'managed'
+      - '--allow-unauthenticated'
+      - '--memory'
+      - '2Gi'
+      - '--cpu'
+      - '2'
+      - '--timeout'
+      - '600'
+      - '--concurrency'
+      - '80'
+      - '--min-instances'
+      - '0'
+      - '--max-instances'
+      - '10'
+      - '--set-env-vars'
+      - 'ENVIRONMENT=production'
+      - '--set-secrets'
+      - 'GEMINI_API_KEY=gemini-api-key:latest'
+    id: 'deploy-cloud-run'
+    waitFor: ['push-image']
+
+# Store images in Container Registry
+images:
+  - 'gcr.io/$PROJECT_ID/autods-pipeline:$COMMIT_SHA'
+  - 'gcr.io/$PROJECT_ID/autods-pipeline:latest'
+
+# Build options
+options:
+  logging: CLOUD_LOGGING_ONLY
+  machineType: 'E2_HIGHCPU_8'
+
+# Timeout for the entire build
+timeout: '1800s'
+
+# Substitution variables
+substitutions:
+  _REGION: 'us-central1'

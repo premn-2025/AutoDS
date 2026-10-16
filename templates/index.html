@@ -1,0 +1,2568 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AutoDS Pipeline - AI-Powered Data Science</title>
+    <link rel="icon" href="/favicon.ico">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root {
+            /* Light Mode Colors */
+            --bg-primary: #f8fafc;
+            --bg-secondary: #ffffff;
+            --bg-tertiary: #f1f5f9;
+            --text-primary: #0f172a;
+            --text-secondary: #475569;
+            --text-muted: #94a3b8;
+            --border-color: #e2e8f0;
+            --card-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1);
+            --card-hover-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+            --glass-bg: rgba(255, 255, 255, 0.8);
+            --glass-border: rgba(255, 255, 255, 0.5);
+            
+            /* Accent Colors */
+            --accent-primary: #6366f1;
+            --accent-secondary: #8b5cf6;
+            --accent-success: #10b981;
+            --accent-warning: #f59e0b;
+            --accent-danger: #ef4444;
+            --accent-info: #06b6d4;
+            
+            /* Gradients */
+            --gradient-primary: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            --gradient-success: linear-gradient(135deg, #10b981 0%, #34d399 100%);
+            --gradient-warning: linear-gradient(135deg, #f59e0b 0%, #fbbf24 100%);
+            --gradient-danger: linear-gradient(135deg, #ef4444 0%, #f87171 100%);
+            --gradient-cool: linear-gradient(135deg, #06b6d4 0%, #8b5cf6 100%);
+            --gradient-sunset: linear-gradient(135deg, #f472b6 0%, #fb923c 100%);
+            --gradient-aurora: linear-gradient(135deg, #a855f7 0%, #06b6d4 50%, #10b981 100%);
+        }
+        
+        [data-theme="dark"] {
+            --bg-primary: #0f0f23;
+            --bg-secondary: #1a1a2e;
+            --bg-tertiary: #16213e;
+            --text-primary: #f1f5f9;
+            --text-secondary: #cbd5e1;
+            --text-muted: #64748b;
+            --border-color: rgba(255, 255, 255, 0.1);
+            --card-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3), 0 2px 4px -2px rgba(0, 0, 0, 0.3);
+            --card-hover-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            --glass-bg: rgba(26, 26, 46, 0.8);
+            --glass-border: rgba(255, 255, 255, 0.1);
+        }
+        
+        * {
+            transition: background-color 0.3s ease, border-color 0.3s ease, color 0.3s ease;
+        }
+        
+        /* Override Bootstrap text classes for theme support */
+        .text-muted { color: var(--text-muted) !important; }
+        .text-secondary { color: var(--text-secondary) !important; }
+        .text-primary { color: var(--text-primary) !important; }
+        
+        /* Better contrast for text */
+        h1, h2, h3, h4, h5, h6 { color: var(--text-primary); }
+        p, li, span, label { color: var(--text-primary); }
+        small { color: var(--text-secondary); }
+        
+        body {
+            background: var(--bg-primary);
+            min-height: 100vh;
+            color: var(--text-primary);
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+            overflow-x: hidden;
+        }
+        
+        /* Animated Background */
+        .bg-animated {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            overflow: hidden;
+        }
+        
+        .bg-animated::before {
+            content: '';
+            position: absolute;
+            width: 150%;
+            height: 150%;
+            background: radial-gradient(ellipse at 20% 20%, rgba(99, 102, 241, 0.15) 0%, transparent 50%),
+                        radial-gradient(ellipse at 80% 80%, rgba(139, 92, 246, 0.1) 0%, transparent 50%),
+                        radial-gradient(ellipse at 40% 60%, rgba(16, 185, 129, 0.08) 0%, transparent 40%);
+            animation: bgFloat 20s ease-in-out infinite;
+        }
+        
+        [data-theme="light"] .bg-animated::before {
+            background: radial-gradient(ellipse at 20% 20%, rgba(99, 102, 241, 0.08) 0%, transparent 50%),
+                        radial-gradient(ellipse at 80% 80%, rgba(139, 92, 246, 0.05) 0%, transparent 50%),
+                        radial-gradient(ellipse at 40% 60%, rgba(16, 185, 129, 0.03) 0%, transparent 40%);
+        }
+        
+        @keyframes bgFloat {
+            0%, 100% { transform: translate(0, 0) rotate(0deg); }
+            25% { transform: translate(-5%, 5%) rotate(2deg); }
+            50% { transform: translate(5%, -5%) rotate(-2deg); }
+            75% { transform: translate(-3%, -3%) rotate(1deg); }
+        }
+        
+        /* Navbar */
+        .navbar {
+            background: var(--glass-bg) !important;
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-bottom: 1px solid var(--border-color);
+            padding: 1rem 0;
+        }
+        
+        .navbar-brand {
+            font-weight: 800;
+            font-size: 1.6rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .navbar-brand .logo-icon {
+            width: 42px;
+            height: 42px;
+            background: var(--gradient-primary);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.3rem;
+            color: white;
+            box-shadow: 0 4px 15px rgba(99, 102, 241, 0.4);
+        }
+        
+        .brand-text {
+            background: var(--gradient-primary);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        /* Theme Toggle */
+        .theme-toggle {
+            width: 60px;
+            height: 32px;
+            background: var(--bg-tertiary);
+            border-radius: 20px;
+            padding: 3px;
+            cursor: pointer;
+            position: relative;
+            border: 2px solid var(--border-color);
+            transition: all 0.3s ease;
+        }
+        
+        .theme-toggle:hover {
+            border-color: var(--accent-primary);
+        }
+        
+        .theme-toggle .toggle-thumb {
+            width: 24px;
+            height: 24px;
+            background: var(--gradient-primary);
+            border-radius: 50%;
+            position: absolute;
+            top: 3px;
+            left: 3px;
+            transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 0.8rem;
+        }
+        
+        [data-theme="light"] .toggle-thumb {
+            left: calc(100% - 27px);
+        }
+        
+        /* Cards */
+        .card {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 20px;
+            box-shadow: var(--card-shadow);
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+        
+        .card:hover {
+            box-shadow: var(--card-hover-shadow);
+            transform: translateY(-2px);
+        }
+        
+        .card-header {
+            background: var(--bg-tertiary);
+            border-bottom: 1px solid var(--border-color);
+            font-weight: 600;
+            padding: 1.25rem 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .card-header i {
+            font-size: 1.1rem;
+            color: var(--accent-primary);
+        }
+        
+        .card-body {
+            padding: 1.5rem;
+        }
+        
+        /* Upload Zone */
+        .upload-zone {
+            border: 2px dashed var(--border-color);
+            border-radius: 20px;
+            padding: 3.5rem 2rem;
+            text-align: center;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            background: var(--bg-tertiary);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .upload-zone::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: var(--gradient-primary);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        
+        .upload-zone:hover, .upload-zone.dragover {
+            border-color: var(--accent-primary);
+            transform: scale(1.02);
+        }
+        
+        .upload-zone:hover::before, .upload-zone.dragover::before {
+            opacity: 0.05;
+        }
+        
+        .upload-zone .upload-icon {
+            width: 80px;
+            height: 80px;
+            margin: 0 auto 1.5rem;
+            background: var(--gradient-primary);
+            border-radius: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2.5rem;
+            color: white;
+            box-shadow: 0 10px 30px rgba(99, 102, 241, 0.3);
+            animation: float 3s ease-in-out infinite;
+        }
+        
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+        
+        .upload-zone h5 {
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: var(--text-primary);
+        }
+        
+        /* Buttons */
+        .btn-primary {
+            background: var(--gradient-primary);
+            border: none;
+            padding: 14px 32px;
+            font-weight: 600;
+            border-radius: 14px;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 4px 15px rgba(99, 102, 241, 0.4);
+        }
+        
+        .btn-primary::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(135deg, rgba(255,255,255,0.2) 0%, transparent 100%);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 15px 35px rgba(99, 102, 241, 0.5);
+        }
+        
+        .btn-primary:hover::before {
+            opacity: 1;
+        }
+        
+        .btn-success {
+            background: var(--gradient-success);
+            border: none;
+            padding: 14px 32px;
+            font-weight: 600;
+            border-radius: 14px;
+            box-shadow: 0 4px 15px rgba(16, 185, 129, 0.4);
+        }
+        
+        .btn-success:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 15px 35px rgba(16, 185, 129, 0.5);
+            background: var(--gradient-success);
+        }
+        
+        .btn-outline-light {
+            border: 2px solid var(--border-color);
+            color: var(--text-primary);
+            border-radius: 12px;
+            padding: 10px 20px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-outline-light:hover {
+            background: var(--accent-primary);
+            border-color: var(--accent-primary);
+            color: white;
+            transform: translateY(-2px);
+        }
+        
+        /* Agent Steps */
+        .agent-step {
+            display: flex;
+            align-items: center;
+            padding: 1.25rem;
+            margin: 0.75rem 0;
+            background: var(--bg-tertiary);
+            border-radius: 16px;
+            border-left: 4px solid transparent;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .agent-step::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        
+        .agent-step.waiting {
+            border-left-color: var(--text-muted);
+            opacity: 0.6;
+        }
+        
+        .agent-step.running {
+            border-left-color: var(--accent-primary);
+            opacity: 1;
+        }
+        
+        .agent-step.running::before {
+            background: var(--gradient-primary);
+            opacity: 0.08;
+            animation: shimmer 2s infinite;
+        }
+        
+        @keyframes shimmer {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(100%); }
+        }
+        
+        .agent-step.completed {
+            border-left-color: var(--accent-success);
+            opacity: 1;
+        }
+        
+        .agent-step.completed::before {
+            background: var(--gradient-success);
+            opacity: 0.08;
+        }
+        
+        .agent-step.error {
+            border-left-color: var(--accent-danger);
+        }
+        
+        .agent-icon {
+            width: 52px;
+            height: 52px;
+            border-radius: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.4rem;
+            margin-right: 1rem;
+            color: white;
+            flex-shrink: 0;
+        }
+        
+        .agent-step.waiting .agent-icon { background: var(--text-muted); }
+        .agent-step.running .agent-icon { background: var(--gradient-primary); box-shadow: 0 4px 15px rgba(99, 102, 241, 0.4); }
+        .agent-step.completed .agent-icon { background: var(--gradient-success); box-shadow: 0 4px 15px rgba(16, 185, 129, 0.4); }
+        .agent-step.error .agent-icon { background: var(--gradient-danger); }
+        
+        /* Model Cards */
+        .model-card {
+            background: var(--bg-tertiary);
+            border-radius: 16px;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+            border: 1px solid var(--border-color);
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .model-card:hover {
+            transform: translateY(-4px);
+            box-shadow: var(--card-hover-shadow);
+        }
+        
+        .model-card.best {
+            border: 2px solid var(--accent-success);
+            background: linear-gradient(135deg, rgba(16, 185, 129, 0.1) 0%, rgba(52, 211, 153, 0.05) 100%);
+        }
+        
+        .model-card.best::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 80px;
+            height: 80px;
+            background: var(--gradient-success);
+            transform: translate(40%, -40%) rotate(45deg);
+            opacity: 0.3;
+        }
+        
+        /* Metric Badges */
+        .metric-badge {
+            display: inline-flex;
+            align-items: center;
+            padding: 0.6rem 1.2rem;
+            border-radius: 12px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            margin: 0.25rem;
+            gap: 0.4rem;
+        }
+        
+        .metric-badge.accuracy { 
+            background: rgba(99, 102, 241, 0.15); 
+            color: var(--accent-primary);
+        }
+        .metric-badge.precision { 
+            background: rgba(139, 92, 246, 0.15); 
+            color: var(--accent-secondary);
+        }
+        .metric-badge.recall { 
+            background: rgba(16, 185, 129, 0.15); 
+            color: var(--accent-success);
+        }
+        
+        /* Tabs */
+        .nav-tabs {
+            border: none;
+            gap: 0.5rem;
+            background: var(--bg-secondary);
+            padding: 0.5rem;
+            border-radius: 16px;
+            box-shadow: var(--card-shadow);
+        }
+        
+        .nav-tabs .nav-link {
+            border: none;
+            border-radius: 12px;
+            padding: 0.875rem 1.5rem;
+            font-weight: 600;
+            color: var(--text-secondary);
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .nav-tabs .nav-link:hover {
+            color: var(--accent-primary);
+            background: var(--bg-tertiary);
+        }
+        
+        .nav-tabs .nav-link.active {
+            background: var(--gradient-primary);
+            color: white;
+            box-shadow: 0 4px 15px rgba(99, 102, 241, 0.4);
+        }
+        
+        /* Status Badge */
+        .status-badge {
+            padding: 0.5rem 1.25rem;
+            border-radius: 25px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .status-badge.healthy { 
+            background: rgba(16, 185, 129, 0.15);
+            color: var(--accent-success);
+        }
+        
+        .status-badge.healthy::before {
+            content: '';
+            width: 8px;
+            height: 8px;
+            background: var(--accent-success);
+            border-radius: 50%;
+            animation: pulse-dot 2s infinite;
+        }
+        
+        @keyframes pulse-dot {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.5; transform: scale(1.2); }
+        }
+        
+        /* Form Controls */
+        .form-control {
+            background: var(--bg-tertiary);
+            border: 2px solid var(--border-color);
+            border-radius: 12px;
+            padding: 0.875rem 1rem;
+            color: var(--text-primary);
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+        
+        .form-control:focus {
+            background: var(--bg-tertiary);
+            border-color: var(--accent-primary);
+            box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.15);
+            color: var(--text-primary);
+        }
+        
+        .form-control::placeholder {
+            color: var(--text-muted);
+        }
+        
+        .form-label {
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 0.5rem;
+        }
+        
+        /* Log Output */
+        .log-output {
+            background: #0d1117;
+            border-radius: 12px;
+            padding: 1rem;
+            font-family: 'JetBrains Mono', 'Fira Code', monospace;
+            font-size: 0.8rem;
+            max-height: 200px;
+            overflow-y: auto;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+        
+        .log-line { margin: 0.3rem 0; display: flex; gap: 0.5rem; }
+        .log-line .time { color: #6e7681; }
+        .log-line.info .msg { color: #58a6ff; }
+        .log-line.success .msg { color: #3fb950; }
+        .log-line.warning .msg { color: #d29922; }
+        .log-line.error .msg { color: #f85149; }
+        
+        /* Stats Cards */
+        .stat-card {
+            text-align: center;
+            padding: 1.25rem;
+            border-radius: 16px;
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border-color);
+            transition: all 0.3s ease;
+        }
+        
+        .stat-card:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--card-shadow);
+        }
+        
+        .stat-card h3 {
+            font-size: 1.75rem;
+            font-weight: 800;
+            margin-bottom: 0.25rem;
+            background: var(--gradient-primary);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .stat-card.success h3 { background: var(--gradient-success); -webkit-background-clip: text; background-clip: text; }
+        .stat-card.warning h3 { background: var(--gradient-sunset); -webkit-background-clip: text; background-clip: text; }
+        .stat-card.info h3 { background: var(--gradient-cool); -webkit-background-clip: text; background-clip: text; }
+        
+        .stat-card small {
+            color: var(--text-secondary);
+            font-weight: 500;
+        }
+        
+        /* File Info */
+        .file-info {
+            background: linear-gradient(135deg, rgba(99, 102, 241, 0.1) 0%, rgba(139, 92, 246, 0.05) 100%);
+            border: 1px solid rgba(99, 102, 241, 0.2);
+            border-radius: 14px;
+            padding: 1rem 1.25rem;
+            margin-top: 1rem;
+        }
+        
+        /* Results Section */
+        .results-section { display: none; }
+        .results-section.show { 
+            display: block; 
+            animation: slideUp 0.5s ease;
+        }
+        
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        /* Scrollbar */
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: var(--bg-tertiary); border-radius: 4px; }
+        ::-webkit-scrollbar-thumb { background: var(--text-muted); border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: var(--accent-primary); }
+        
+        /* Modal */
+        .modal-content {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 20px;
+        }
+        
+        .modal-header {
+            border-bottom: 1px solid var(--border-color);
+            padding: 1.25rem 1.5rem;
+        }
+        
+        .modal-footer {
+            border-top: 1px solid var(--border-color);
+        }
+        
+        /* Table */
+        .table {
+            color: var(--text-primary);
+        }
+        
+        .table th {
+            font-weight: 600;
+            color: var(--text-secondary);
+            border-color: var(--border-color);
+        }
+        
+        .table td {
+            border-color: var(--border-color);
+        }
+        
+        /* Alert */
+        .alert {
+            border-radius: 14px;
+            border: none;
+        }
+        
+        /* Progress Container */
+        #progressContainer { display: none; }
+        
+        /* Tab Panes - Ensure visibility */
+        .tab-pane {
+            min-height: 200px;
+            display: none;
+        }
+        
+        .tab-pane.active.show {
+            display: block !important;
+            opacity: 1 !important;
+            visibility: visible !important;
+        }
+        
+        /* Responsive */
+        @media (max-width: 768px) {
+            .navbar-brand { font-size: 1.3rem; }
+            .navbar-brand .logo-icon { width: 36px; height: 36px; }
+            .upload-zone { padding: 2rem 1rem; }
+            .upload-zone .upload-icon { width: 60px; height: 60px; font-size: 1.8rem; }
+        }
+    </style>
+</head>
+<body>
+    <div class="bg-animated"></div>
+    
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg">
+        <div class="container">
+            <a class="navbar-brand" href="#">
+                <div class="logo-icon"><i class="bi bi-robot"></i></div>
+                <span class="brand-text">AutoDS Pipeline</span>
+            </a>
+            <div class="d-flex align-items-center gap-3">
+                <span id="systemStatus" class="status-badge healthy">
+                    System Online
+                </span>
+                <div class="theme-toggle" onclick="toggleTheme()" title="Toggle Light/Dark Mode">
+                    <div class="toggle-thumb">
+                        <i class="bi bi-moon-fill" id="themeIcon"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="container py-4">
+        <!-- Mode Tabs -->
+        <ul class="nav nav-tabs mb-4" id="modeTabs" role="tablist">
+            <li class="nav-item" role="presentation">
+                <button class="nav-link active" id="ml-tab" data-bs-toggle="tab" data-bs-target="#ml-panel" type="button" role="tab">
+                    <i class="bi bi-cpu me-2"></i>ML Pipeline
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="forecast-tab" data-bs-toggle="tab" data-bs-target="#forecast-panel" type="button" role="tab">
+                    <i class="bi bi-graph-up-arrow me-2"></i>Time Series Forecasting
+                </button>
+            </li>
+        </ul>
+        
+        <div class="tab-content" id="modeTabContent">
+            <!-- ML Pipeline Tab -->
+            <div class="tab-pane fade show active" id="ml-panel" role="tabpanel">
+                <div class="row">
+                    <!-- Left Panel - Upload & Controls -->
+                    <div class="col-lg-5 mb-4">
+                        <!-- Upload Card -->
+                        <div class="card mb-4">
+                            <div class="card-header">
+                                <i class="bi bi-cloud-upload"></i>
+                                Upload Dataset
+                            </div>
+                            <div class="card-body">
+                                <div class="upload-zone" id="uploadZone">
+                                    <div class="upload-icon">
+                                        <i class="bi bi-file-earmark-spreadsheet"></i>
+                                    </div>
+                                    <h5>Drag & Drop your CSV file here</h5>
+                                    <p class="text-secondary mb-0">or click to browse</p>
+                                    <input type="file" id="fileInput" accept=".csv" style="display: none;">
+                                </div>
+                        
+                                <div class="file-info" id="fileInfo" style="display: none;">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <div>
+                                            <i class="bi bi-file-earmark-check me-2" style="color: var(--accent-success);"></i>
+                                            <span id="fileName" style="font-weight: 600;">dataset.csv</span>
+                                        </div>
+                                        <button class="btn btn-sm btn-outline-light" onclick="clearFile()">
+                                            <i class="bi bi-x-lg"></i>
+                                        </button>
+                                    </div>
+                                    <small class="text-secondary" id="fileSize"></small>
+                                </div>
+
+                                <div class="mt-4">
+                                    <label class="form-label">Target Column</label>
+                                    <input type="text" id="targetColumn" class="form-control" 
+                                           placeholder="e.g., species, price, label">
+                                    <small class="text-secondary">The column you want to predict</small>
+                                </div>
+
+                                <button class="btn btn-primary w-100 mt-4" id="runPipelineBtn" onclick="runPipeline()">
+                                    <i class="bi bi-play-fill me-2"></i>Run AI Pipeline
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Agent Progress Card -->
+                        <div class="card" id="progressContainer">
+                            <div class="card-header">
+                                <i class="bi bi-gear-wide-connected"></i>
+                                Pipeline Progress
+                                <span class="float-end" id="pipelineTime" style="color: var(--accent-info);"></span>
+                            </div>
+                            <div class="card-body">
+                                <div class="agent-step waiting" id="step-ingestion">
+                                    <div class="agent-icon"><i class="bi bi-database"></i></div>
+                                    <div class="flex-grow-1">
+                                        <h6 class="mb-0">Data Ingestion Agent</h6>
+                                        <small class="text-secondary">Loading and analyzing dataset</small>
+                                    </div>
+                                    <div class="step-status"></div>
+                                </div>
+                        
+                                <div class="agent-step waiting" id="step-eda">
+                                    <div class="agent-icon"><i class="bi bi-bar-chart"></i></div>
+                                    <div class="flex-grow-1">
+                                        <h6 class="mb-0">EDA Agent</h6>
+                                        <small class="text-secondary">Exploratory data analysis & visualizations</small>
+                                    </div>
+                                    <div class="step-status"></div>
+                                </div>
+                        
+                                <div class="agent-step waiting" id="step-preprocessing">
+                                    <div class="agent-icon"><i class="bi bi-funnel"></i></div>
+                                    <div class="flex-grow-1">
+                                        <h6 class="mb-0">Preprocessing Agent</h6>
+                                        <small class="text-secondary">Cleaning and transforming data</small>
+                                    </div>
+                                    <div class="step-status"></div>
+                                </div>
+                        
+                                <div class="agent-step waiting" id="step-model_selection">
+                                    <div class="agent-icon"><i class="bi bi-diagram-3"></i></div>
+                                    <div class="flex-grow-1">
+                                        <h6 class="mb-0">Model Selection Agent</h6>
+                                        <small class="text-secondary">Choosing best algorithms</small>
+                                    </div>
+                                    <div class="step-status"></div>
+                                </div>
+                        
+                                <div class="agent-step waiting" id="step-training">
+                                    <div class="agent-icon"><i class="bi bi-lightning"></i></div>
+                                    <div class="flex-grow-1">
+                                        <h6 class="mb-0">Training Agent</h6>
+                                        <small class="text-secondary">Training ML models</small>
+                                    </div>
+                                    <div class="step-status"></div>
+                                </div>
+                        
+                                <div class="agent-step waiting" id="step-evaluation">
+                                    <div class="agent-icon"><i class="bi bi-graph-up"></i></div>
+                                    <div class="flex-grow-1">
+                                        <h6 class="mb-0">Evaluation Agent</h6>
+                                        <small class="text-secondary">Analyzing model performance</small>
+                                    </div>
+                                    <div class="step-status"></div>
+                                </div>
+                            </div>
+                </div>
+            </div>
+
+            <!-- Right Panel - Results -->
+            <div class="col-lg-7">
+                <!-- Results Section -->
+                <div class="results-section" id="resultsSection">
+                    <!-- EDA Visualizations Card -->
+                    <div class="card mb-4" id="edaCard" style="display: none;">
+                        <div class="card-header d-flex justify-content-between align-items-center">
+                            <span><i class="bi bi-bar-chart me-2"></i>Exploratory Data Analysis</span>
+                            <button class="btn btn-sm btn-outline-light" onclick="toggleEdaDetails()">
+                                <i class="bi bi-chevron-down" id="edaToggleIcon"></i>
+                            </button>
+                        </div>
+                        <div class="card-body" id="edaBody">
+                            <div class="row mb-3">
+                                <div class="col-md-3">
+                                    <div class="text-center p-2" style="background: rgba(102, 126, 234, 0.1); border-radius: 8px;">
+                                        <h5 class="mb-0" id="edaRows">-</h5>
+                                        <small class="text-muted">Rows</small>
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="text-center p-2" style="background: rgba(56, 239, 125, 0.1); border-radius: 8px;">
+                                        <h5 class="mb-0" id="edaCols">-</h5>
+                                        <small class="text-muted">Columns</small>
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="text-center p-2" style="background: rgba(240, 147, 251, 0.1); border-radius: 8px;">
+                                        <h5 class="mb-0" id="edaQuality">-</h5>
+                                        <small class="text-muted">Quality Score</small>
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="text-center p-2" style="background: rgba(245, 87, 108, 0.1); border-radius: 8px;">
+                                        <h5 class="mb-0" id="edaMissing">-</h5>
+                                        <small class="text-muted">Missing Values</small>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Visualization tabs -->
+                            <ul class="nav nav-pills mb-3" id="edaTabs">
+                                <li class="nav-item">
+                                    <a class="nav-link active" href="#" onclick="showEdaChart('correlation')">Correlation</a>
+                                </li>
+                                <li class="nav-item">
+                                    <a class="nav-link" href="#" onclick="showEdaChart('distribution')">Distributions</a>
+                                </li>
+                                <li class="nav-item">
+                                    <a class="nav-link" href="#" onclick="showEdaChart('boxplot')">Outliers</a>
+                                </li>
+                            </ul>
+                            <div id="edaChartContainer" class="text-center">
+                                <img id="edaChart" src="" alt="EDA Visualization" style="max-width: 100%; border-radius: 8px;">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card mb-4">
+                        <div class="card-header d-flex justify-content-between align-items-center">
+                            <span><i class="bi bi-trophy me-2"></i>Pipeline Results</span>
+                            <span class="badge bg-success" id="resultTime"></span>
+                        </div>
+                        <div class="card-body">
+                            <!-- Summary Stats -->
+                            <div class="row mb-4">
+                                <div class="col-4">
+                                    <div class="text-center p-3" style="background: rgba(102, 126, 234, 0.1); border-radius: 12px;">
+                                        <h3 class="mb-0" id="totalModels">0</h3>
+                                        <small class="text-muted">Models Trained</small>
+                                    </div>
+                                </div>
+                                <div class="col-4">
+                                    <div class="text-center p-3" style="background: rgba(56, 239, 125, 0.1); border-radius: 12px;">
+                                        <h3 class="mb-0" id="bestAccuracy">0%</h3>
+                                        <small class="text-muted" id="bestScoreLabel">Best Accuracy</small>
+                                    </div>
+                                </div>
+                                <div class="col-4">
+                                    <div class="text-center p-3" style="background: rgba(240, 147, 251, 0.1); border-radius: 12px;">
+                                        <h3 class="mb-0" id="problemType">-</h3>
+                                        <small class="text-muted">Problem Type</small>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Model Cards -->
+                            <h6 class="mb-3"><i class="bi bi-cpu me-2"></i>Trained Models</h6>
+                            <div id="modelCards"></div>
+                            
+                            <!-- Feature Importance -->
+                            <div id="featureImportanceSection" style="display: none;">
+                                <h6 class="mt-4 mb-3"><i class="bi bi-sort-down me-2"></i>Feature Importance</h6>
+                                <div id="featureImportance"></div>
+                            </div>
+                            
+                            <!-- Model Actions -->
+                            <div class="mt-4 d-flex gap-2" id="modelActions">
+                                <button class="btn btn-success" id="downloadModelBtn" onclick="downloadModel()" style="display: none;">
+                                    <i class="bi bi-download me-2"></i>Download Best Model
+                                </button>
+                                <button class="btn btn-primary" id="openPredictBtn" onclick="showPredictionModal()" style="display: none;">
+                                    <i class="bi bi-lightning me-2"></i>Make Predictions
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- AI Insights -->
+                    <div class="card mb-4">
+                        <div class="card-header">
+                            <i class="bi bi-lightbulb" style="color: var(--accent-warning);"></i>
+                            AI Insights
+                        </div>
+                        <div class="card-body">
+                            <div id="aiInsights" style="color: var(--text-secondary);">
+                                <i class="bi bi-hourglass-split me-2"></i>AI-generated insights will appear here after the pipeline completes.
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Dashboard Download Section -->
+                    <div class="card mb-4" id="dashboardCard" style="display: none;">
+                        <div class="card-header">
+                            <i class="bi bi-speedometer2" style="color: var(--accent-info);"></i>
+                            Data Dashboard Report
+                        </div>
+                        <div class="card-body text-center py-4">
+                            <i class="bi bi-file-earmark-bar-graph" style="font-size: 3rem; color: var(--accent-primary);"></i>
+                            <h5 class="mt-3" style="color: var(--text-primary);">Download Complete Analysis Report</h5>
+                            <p style="color: var(--text-secondary);" class="mb-4">
+                                Get a comprehensive HTML report with data statistics, visualizations, 
+                                correlation analysis, and model performance metrics.
+                            </p>
+                            <button class="btn btn-success btn-lg" onclick="downloadDashboard()">
+                                <i class="bi bi-download me-2"></i>Download Dashboard Report
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Logs -->
+                    <div class="card">
+                        <div class="card-header">
+                            <i class="bi bi-terminal me-2"></i>Execution Logs
+                        </div>
+                        <div class="card-body">
+                            <div class="log-output" id="logOutput"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Welcome/Instructions when no results -->
+                <div id="welcomeSection">
+                    <div class="card">
+                        <div class="card-body text-center py-5">
+                            <i class="bi bi-magic" style="font-size: 4rem; background: var(--primary-gradient); -webkit-background-clip: text; -webkit-text-fill-color: transparent;"></i>
+                            <h3 class="mt-4">AI-Powered Data Science Pipeline</h3>
+                            <p class="text-muted mb-4">Upload your dataset and let our AI agents automatically:</p>
+                            <div class="row text-start px-4">
+                                <div class="col-md-6 mb-3">
+                                    <div class="d-flex align-items-center">
+                                        <div class="agent-icon me-3" style="background: var(--primary-gradient); width: 40px; height: 40px; font-size: 1rem;">
+                                            <i class="bi bi-database"></i>
+                                        </div>
+                                        <div>
+                                            <strong>Ingest & Analyze</strong>
+                                            <br><small class="text-muted">Understand your data structure</small>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <div class="d-flex align-items-center">
+                                        <div class="agent-icon me-3" style="background: var(--success-gradient); width: 40px; height: 40px; font-size: 1rem;">
+                                            <i class="bi bi-funnel"></i>
+                                        </div>
+                                        <div>
+                                            <strong>Clean & Preprocess</strong>
+                                            <br><small class="text-muted">Handle missing values, encode features</small>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <div class="d-flex align-items-center">
+                                        <div class="agent-icon me-3" style="background: rgba(240, 147, 251, 0.5); width: 40px; height: 40px; font-size: 1rem;">
+                                            <i class="bi bi-diagram-3"></i>
+                                        </div>
+                                        <div>
+                                            <strong>Select Models</strong>
+                                            <br><small class="text-muted">AI picks best algorithms</small>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <div class="d-flex align-items-center">
+                                        <div class="agent-icon me-3" style="background: rgba(245, 87, 108, 0.5); width: 40px; height: 40px; font-size: 1rem;">
+                                            <i class="bi bi-lightning"></i>
+                                        </div>
+                                        <div>
+                                            <strong>Train & Evaluate</strong>
+                                            <br><small class="text-muted">Cross-validation & metrics</small>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <hr class="my-4">
+                            <p class="mb-0"><i class="bi bi-arrow-left me-2"></i>Upload a CSV file to get started</p>
+                        </div>
+                    </div>
+
+                    <!-- Sample Datasets -->
+                    <div class="card mt-4">
+                        <div class="card-header">
+                            <i class="bi bi-folder me-2"></i>Sample Datasets
+                        </div>
+                        <div class="card-body">
+                            <p class="text-muted mb-3">Try with these built-in datasets:</p>
+                            <button class="btn btn-outline-light me-2 mb-2" onclick="useSampleDataset('iris_sample.csv', 'species')">
+                                <i class="bi bi-flower1 me-2"></i>Iris (Classification)
+                            </button>
+                            <button class="btn btn-outline-light me-2 mb-2" onclick="useSampleDataset('housing_sample.csv', 'price')">
+                                <i class="bi bi-house me-2"></i>Housing (Regression)
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+            </div><!-- End ML Pipeline Tab -->
+            
+            <!-- Time Series Forecasting Tab -->
+            <div class="tab-pane fade" id="forecast-panel" role="tabpanel">
+                <div class="row">
+                    <div class="col-lg-5 mb-4">
+                        <!-- Forecasting Upload Card -->
+                        <div class="card mb-4">
+                            <div class="card-header">
+                                <i class="bi bi-graph-up-arrow"></i>
+                                Upload Time Series Data
+                            </div>
+                            <div class="card-body">
+                                <div class="upload-zone" id="forecastUploadZone">
+                                    <div class="upload-icon" style="background: var(--gradient-success);">
+                                        <i class="bi bi-clock-history"></i>
+                                    </div>
+                                    <h5>Upload Time Series CSV</h5>
+                                    <p class="text-secondary mb-0">Data with date/time column</p>
+                                    <input type="file" id="forecastFileInput" accept=".csv" style="display: none;">
+                                </div>
+                                
+                                <div class="file-info" id="forecastFileInfo" style="display: none;">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <div>
+                                            <i class="bi bi-file-earmark-check me-2" style="color: var(--accent-success);"></i>
+                                            <span id="forecastFileName" style="font-weight: 600;">timeseries.csv</span>
+                                        </div>
+                                        <button class="btn btn-sm btn-outline-light" onclick="clearForecastFile()">
+                                            <i class="bi bi-x-lg"></i>
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <div class="mt-4">
+                                    <label class="form-label">Date Column (optional)</label>
+                                    <input type="text" id="dateColumn" class="form-control" 
+                                           placeholder="e.g., date, timestamp, time">
+                                    <small class="text-secondary">Column with date/time values</small>
+                                </div>
+
+                                <div class="mt-3">
+                                    <label class="form-label">Target Column (to forecast)</label>
+                                    <input type="text" id="forecastTarget" class="form-control" 
+                                           placeholder="e.g., sales, temperature, price">
+                                </div>
+
+                                <div class="row mt-3">
+                                    <div class="col-6">
+                                        <label class="form-label">Forecast Periods</label>
+                                        <input type="number" id="forecastPeriods" class="form-control" 
+                                               value="30" min="1" max="365">
+                                    </div>
+                                    <div class="col-6">
+                                        <label class="form-label">Frequency</label>
+                                        <select id="forecastFrequency" class="form-control">
+                                            <option value="D">Daily</option>
+                                            <option value="W">Weekly</option>
+                                            <option value="M">Monthly</option>
+                                            <option value="H">Hourly</option>
+                                        </select>
+                                    </div>
+                                </div>
+
+                                <button class="btn btn-success w-100 mt-4" id="runForecastBtn" onclick="runForecast()">
+                                    <i class="bi bi-graph-up me-2"></i>Run Forecast
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <!-- Forecast Info Card -->
+                        <div class="card">
+                            <div class="card-header">
+                                <i class="bi bi-info-circle"></i>
+                                Forecasting Models
+                            </div>
+                            <div class="card-body">
+                                <ul class="list-unstyled mb-0">
+                                    <li class="mb-2"><i class="bi bi-check-circle me-2" style="color: var(--accent-success);"></i>Exponential Smoothing</li>
+                                    <li class="mb-2"><i class="bi bi-check-circle me-2" style="color: var(--accent-success);"></i>ARIMA (if available)</li>
+                                    <li class="mb-2"><i class="bi bi-check-circle me-2" style="color: var(--accent-success);"></i>Linear Trend</li>
+                                    <li class="mb-2"><i class="bi bi-check-circle me-2" style="color: var(--accent-success);"></i>Moving Average</li>
+                                    <li><i class="bi bi-check-circle me-2" style="color: var(--accent-success);"></i>Prophet (if installed)</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Forecast Results -->
+                    <div class="col-lg-7">
+                        <div id="forecastResults" style="display: none;">
+                            <!-- Analysis Card -->
+                            <div class="card mb-4">
+                                <div class="card-header">
+                                    <i class="bi bi-bar-chart"></i>
+                                    Time Series Analysis
+                                </div>
+                                <div class="card-body">
+                                    <div class="row g-3">
+                                        <div class="col-md-3">
+                                            <div class="stat-card">
+                                                <h3 id="tsLength">-</h3>
+                                                <small>Data Points</small>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-3">
+                                            <div class="stat-card success">
+                                                <h3 id="tsTrend">-</h3>
+                                                <small>Trend</small>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-3">
+                                            <div class="stat-card warning">
+                                                <h3 id="tsMean">-</h3>
+                                                <small>Mean</small>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-3">
+                                            <div class="stat-card info">
+                                                <h3 id="tsStd">-</h3>
+                                                <small
+                                        </div>
+                                        <div class="col-md-3">
+                                            <div class="stat-card info">
+                                                <h3 id="tsStd">-</h3>
+                                                <small>Std Dev</small>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Forecast Chart -->
+                            <div class="card mb-4">
+                                <div class="card-header">
+                                    <i class="bi bi-graph-up-arrow me-2"></i>Forecast Visualization
+                                </div>
+                                <div class="card-body">
+                                    <canvas id="forecastChart" height="250"></canvas>
+                                </div>
+                            </div>
+                            
+                            <!-- Model Results -->
+                            <div class="card mb-4">
+                                <div class="card-header">
+                                    <i class="bi bi-trophy" style="color: var(--accent-warning);"></i>
+                                    Model Performance
+                                </div>
+                                <div class="card-body" id="forecastModelCards">
+                                    <!-- Model cards will be inserted here -->
+                                </div>
+                            </div>
+                            
+                            <!-- Forecast Values -->
+                            <div class="card">
+                                <div class="card-header d-flex justify-content-between align-items-center">
+                                    <span><i class="bi bi-table" style="color: var(--accent-info);"></i> Forecast Values</span>
+                                    <button class="btn btn-sm btn-outline-light" onclick="downloadForecast()">
+                                        <i class="bi bi-download me-2"></i>Download CSV
+                                    </button>
+                                </div>
+                                <div class="card-body" style="max-height: 200px; overflow-y: auto;">
+                                    <table class="table table-sm" id="forecastTable">
+                                        <thead>
+                                            <tr><th>Period</th><th>Forecast Value</th></tr>
+                                        </thead>
+                                        <tbody id="forecastTableBody"></tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- No Forecast Placeholder -->
+                        <div class="card" id="forecastPlaceholder">
+                            <div class="card-body text-center py-5">
+                                <i class="bi bi-graph-up-arrow" style="font-size: 4rem; color: var(--accent-primary);"></i>
+                                <h4 class="mt-4" style="color: var(--text-primary);">Time Series Forecasting</h4>
+                                <p class="text-muted">Upload time series data to generate forecasts</p>
+                                <p class="text-muted mb-0">Supports sales, stock prices, weather, and any sequential data!</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div><!-- End Forecasting Tab -->
+            
+        </div><!-- End Tab Content -->
+    </div>
+    
+    <!-- Prediction Modal -->
+    <div class="modal fade" id="predictionModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title"><i class="bi bi-lightning me-2" style="color: var(--accent-primary);"></i>Make Predictions</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <p class="text-secondary">Enter data to get predictions from the trained model.</p>
+                    
+                    <ul class="nav nav-tabs mb-3">
+                        <li class="nav-item">
+                            <a class="nav-link active" id="jsonTab" href="#" onclick="switchPredictTab('json')">
+                                <i class="bi bi-code-slash me-1"></i>JSON Input
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" id="fileTab" href="#" onclick="switchPredictTab('file')">
+                                <i class="bi bi-file-earmark-arrow-up me-1"></i>Upload CSV
+                            </a>
+                        </li>
+                    </ul>
+                    
+                    <div id="jsonInputSection">
+                        <label class="form-label">Input Data (JSON Array)</label>
+                        <textarea id="predictionInput" class="form-control" rows="6" 
+                                  placeholder='[{"feature1": 1.2, "feature2": 3.4}, {"feature1": 2.1, "feature2": 4.5}]'></textarea>
+                    </div>
+                    
+                    <div id="fileInputSection" style="display: none;">
+                        <label class="form-label">Upload CSV File</label>
+                        <input type="file" id="predictionFile" class="form-control" accept=".csv">
+                    </div>
+                    
+                    <div id="predictionResult" class="mt-3" style="display: none;">
+                        <h6><i class="bi bi-check-circle me-2" style="color: var(--accent-success);"></i>Predictions</h6>
+                        <pre class="log-output" id="predictionOutput" style="max-height: 200px; overflow-y: auto;"></pre>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline-light" data-bs-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-primary" onclick="makePrediction()">
+                        <i class="bi bi-play-fill me-2"></i>Get Predictions
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        let selectedFile = null;
+        let pollInterval = null;
+        let currentPipelineId = null;
+        let edaVisualizations = {};
+        let forecastChart = null;
+        
+        // Theme Toggle Function
+        function toggleTheme() {
+            const html = document.documentElement;
+            const currentTheme = html.getAttribute('data-theme');
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+            html.setAttribute('data-theme', newTheme);
+            localStorage.setItem('theme', newTheme);
+            updateThemeIcon(newTheme);
+            updateChartColors(newTheme);
+        }
+        
+        function updateThemeIcon(theme) {
+            const icon = document.getElementById('themeIcon');
+            if (theme === 'dark') {
+                icon.classList.remove('bi-sun-fill');
+                icon.classList.add('bi-moon-fill');
+            } else {
+                icon.classList.remove('bi-moon-fill');
+                icon.classList.add('bi-sun-fill');
+            }
+        }
+        
+        function updateChartColors(theme) {
+            // Update Chart.js global defaults
+            const textColor = theme === 'dark' ? '#f1f5f9' : '#0f172a';
+            const gridColor = theme === 'dark' ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)';
+            
+            Chart.defaults.color = textColor;
+            Chart.defaults.borderColor = gridColor;
+            
+            // Refresh any existing charts
+            if (forecastChart) {
+                forecastChart.options.scales.x.ticks.color = textColor;
+                forecastChart.options.scales.y.ticks.color = textColor;
+                forecastChart.options.scales.x.grid.color = gridColor;
+                forecastChart.options.scales.y.grid.color = gridColor;
+                forecastChart.options.plugins.legend.labels.color = textColor;
+                forecastChart.update();
+            }
+        }
+        
+        function initTheme() {
+            const savedTheme = localStorage.getItem('theme') || 'dark';
+            document.documentElement.setAttribute('data-theme', savedTheme);
+            updateThemeIcon(savedTheme);
+            updateChartColors(savedTheme);
+        }
+        
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            initTheme();
+            initializeAPIs();
+            initializeTabs();
+            checkHealth();
+            setupDragDrop();
+            setInterval(checkHealth, 30000);
+
+            // Fallback: ensure tab panes become visible on click
+            // Some environments block Bootstrap's tab JS; this ensures visibility.
+            const tabButtons = document.querySelectorAll('button[data-bs-toggle="tab"]');
+            tabButtons.forEach(btn => {
+                btn.addEventListener('click', () => {
+                    const targetSelector = btn.getAttribute('data-bs-target');
+                    if (!targetSelector) return;
+                    const targetPane = document.querySelector(targetSelector);
+                    if (!targetPane) return;
+                    // Deactivate others, activate the target pane
+                    document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('show', 'active'));
+                    targetPane.classList.add('show', 'active');
+                });
+            });
+        });
+
+        // Initialize all API connections and test connectivity
+        async function initializeAPIs() {
+            console.log('🚀 Initializing API connections...');
+            
+            try {
+                // Test core endpoints
+                const endpoints = [
+                    { url: '/health', name: 'Health Check' },
+                    { url: '/config', name: 'Configuration' },
+                    { url: '/metrics', name: 'Metrics' }
+                ];
+                
+                for (const endpoint of endpoints) {
+                    try {
+                        const response = await fetch(endpoint.url);
+                        if (response.ok) {
+                            console.log(`✅ ${endpoint.name} - Connected`);
+                        } else {
+                            console.warn(`⚠️ ${endpoint.name} - Status: ${response.status}`);
+                        }
+                    } catch (error) {
+                        console.error(`❌ ${endpoint.name} - Error:`, error.message);
+                    }
+                }
+                
+                console.log('✅ API initialization complete');
+                
+            } catch (error) {
+                console.error('❌ API initialization failed:', error);
+            }
+        }
+
+        function setupDragDrop() {
+            const zone = document.getElementById('uploadZone');
+            const fileInput = document.getElementById('fileInput');
+            
+            zone.addEventListener('click', () => fileInput.click());
+            
+            zone.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                zone.classList.add('dragover');
+            });
+            
+            zone.addEventListener('dragleave', () => {
+                zone.classList.remove('dragover');
+            });
+            
+            zone.addEventListener('drop', (e) => {
+                e.preventDefault();
+                zone.classList.remove('dragover');
+                const files = e.dataTransfer.files;
+                if (files.length > 0) {
+                    handleFile(files[0]);
+                }
+            });
+            
+            fileInput.addEventListener('change', (e) => {
+                if (e.target.files.length > 0) {
+                    handleFile(e.target.files[0]);
+                }
+            });
+        }
+
+        function handleFile(file) {
+            if (!file.name.endsWith('.csv')) {
+                alert('Please upload a CSV file');
+                return;
+            }
+            selectedFile = file;
+            document.getElementById('fileName').textContent = file.name;
+            document.getElementById('fileSize').textContent = formatFileSize(file.size);
+            document.getElementById('fileInfo').style.display = 'block';
+            document.getElementById('uploadZone').style.display = 'none';
+        }
+
+        function clearFile() {
+            selectedFile = null;
+            document.getElementById('fileInput').value = '';
+            document.getElementById('fileInfo').style.display = 'none';
+            document.getElementById('uploadZone').style.display = 'block';
+        }
+
+        function formatFileSize(bytes) {
+            if (bytes < 1024) return bytes + ' B';
+            if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+            return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
+        }
+
+        async function checkHealth() {
+            try {
+                const response = await fetch('/health');
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}`);
+                }
+                const data = await response.json();
+                const statusEl = document.getElementById('systemStatus');
+                if (data.status === 'healthy') {
+                    statusEl.className = 'status-badge healthy';
+                    statusEl.innerHTML = '<i class="bi bi-check-circle me-1"></i>System Healthy';
+                } else {
+                    statusEl.className = 'status-badge error';
+                    statusEl.innerHTML = '<i class="bi bi-exclamation-circle me-1"></i>System Error';
+                }
+            } catch (e) {
+                console.error('Health check failed:', e);
+                const statusEl = document.getElementById('systemStatus');
+                statusEl.className = 'status-badge error';
+                statusEl.innerHTML = '<i class="bi bi-wifi-off me-1"></i>Disconnected';
+                // Try to reconnect after 5 seconds
+                setTimeout(checkHealth, 5000);
+            }
+        }
+
+        async function useSampleDataset(filename, targetColumn) {
+            document.getElementById('targetColumn').value = targetColumn;
+            
+            // Fetch the sample file
+            try {
+                const response = await fetch(`/data/${filename}`);
+                const blob = await response.blob();
+                const file = new File([blob], filename, { type: 'text/csv' });
+                handleFile(file);
+            } catch (e) {
+                console.error('Error loading sample:', e);
+                alert('Error loading sample dataset');
+            }
+        }
+
+        async function runPipeline() {
+            const targetColumn = document.getElementById('targetColumn').value.trim();
+            
+            if (!selectedFile) {
+                alert('Please upload a CSV file first');
+                return;
+            }
+            
+            if (!targetColumn) {
+                alert('Please specify the target column');
+                return;
+            }
+            
+            // Reset UI
+            resetProgress();
+            document.getElementById('progressContainer').style.display = 'block';
+            document.getElementById('welcomeSection').style.display = 'none';
+            document.getElementById('resultsSection').classList.remove('show');
+            document.getElementById('runPipelineBtn').disabled = true;
+            document.getElementById('runPipelineBtn').innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Running...';
+            
+            // Clear logs
+            document.getElementById('logOutput').innerHTML = '';
+            addLog('Starting AutoDS Pipeline...', 'info');
+            
+            // Prepare form data
+            const formData = new FormData();
+            formData.append('file', selectedFile);
+            formData.append('target_column', targetColumn);
+            
+            try {
+                addLog(`Uploading ${selectedFile.name}...`, 'info');
+                updateStepStatus('ingestion', 'running');
+                
+                const startTime = Date.now();
+                
+                const response = await fetch('/pipeline/run', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                const result = await response.json();
+                
+                if (response.ok) {
+                    addLog('Pipeline started successfully', 'success');
+                    addLog(`Pipeline ID: ${result.pipeline_id}`, 'info');
+                    
+                    // Poll for results
+                    pollForResults(result.pipeline_id, startTime);
+                } else {
+                    throw new Error(result.message || 'Pipeline failed to start');
+                }
+                
+            } catch (e) {
+                console.error('Error:', e);
+                addLog(`Error: ${e.message}`, 'error');
+                updateStepStatus('ingestion', 'error');
+                resetButton();
+            }
+        }
+
+        function pollForResults(pipelineId, startTime) {
+            currentPipelineId = pipelineId;
+            let stepIndex = 0;
+            const steps = ['ingestion', 'eda', 'preprocessing', 'model_selection', 'training', 'evaluation'];
+            
+            // Simulate step progression
+            const stepInterval = setInterval(() => {
+                if (stepIndex > 0) {
+                    updateStepStatus(steps[stepIndex - 1], 'completed');
+                    addLog(`${formatStepName(steps[stepIndex - 1])} completed`, 'success');
+                }
+                
+                if (stepIndex < steps.length) {
+                    updateStepStatus(steps[stepIndex], 'running');
+                    addLog(`Running ${formatStepName(steps[stepIndex])}...`, 'info');
+                    stepIndex++;
+                }
+            }, 350);
+            
+            // Fetch actual results
+            setTimeout(async () => {
+                clearInterval(stepInterval);
+                
+                try {
+                    // First check status
+                    const statusResponse = await fetch(`/pipeline/${pipelineId}/status`);
+                    const statusData = await statusResponse.json();
+                    
+                    const elapsed = ((Date.now() - startTime) / 1000).toFixed(2);
+                    document.getElementById('pipelineTime').textContent = `${elapsed}s`;
+                    
+                    if (statusData.status === 'completed') {
+                        // Complete all steps
+                        steps.forEach(step => updateStepStatus(step, 'completed'));
+                        
+                        // Fetch full results
+                        const resultResponse = await fetch(`/pipeline/${pipelineId}/result`);
+                        const resultData = await resultResponse.json();
+                        displayResults(resultData);
+                        
+                        // Fetch EDA results
+                        try {
+                            const edaResponse = await fetch(`/pipeline/${pipelineId}/eda`);
+                            if (edaResponse.ok) {
+                                const edaData = await edaResponse.json();
+                                displayEdaResults(edaData);
+                            }
+                        } catch (e) {
+                            console.log('EDA data not available:', e);
+                        }
+                        
+                        addLog(`Pipeline completed in ${elapsed}s`, 'success');
+                    } else if (statusData.status === 'failed') {
+                        // Mark last running step as error
+                        steps.forEach(step => {
+                            const stepEl = document.getElementById(`step-${step}`);
+                            if (stepEl && stepEl.classList.contains('running')) {
+                                updateStepStatus(step, 'error');
+                            }
+                        });
+                        addLog(`Pipeline failed: ${statusData.error}`, 'error');
+                        
+                        // Show error in results section
+                        document.getElementById('resultsSection').classList.add('show');
+                        document.getElementById('modelCards').innerHTML = `
+                            <div class="alert alert-danger">
+                                <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                                <strong>Pipeline Error:</strong> ${statusData.error}
+                            </div>
+                        `;
+                    } else {
+                        addLog('Pipeline completed (results pending)', 'warning');
+                    }
+                    
+                } catch (e) {
+                    addLog(`Error fetching results: ${e.message}`, 'error');
+                }
+                
+                resetButton();
+                
+            }, 2500);
+        }
+
+        function formatStepName(step) {
+            const names = {
+                'ingestion': 'Data Ingestion',
+                'eda': 'EDA',
+                'preprocessing': 'Preprocessing',
+                'model_selection': 'Model Selection',
+                'training': 'Training',
+                'evaluation': 'Evaluation'
+            };
+            return names[step] || step;
+        }
+
+        function updateStepStatus(stepId, status) {
+            const step = document.getElementById(`step-${stepId}`);
+            if (!step) return;
+            
+            step.className = `agent-step ${status}`;
+            const statusDiv = step.querySelector('.step-status');
+            
+            if (status === 'running') {
+                statusDiv.innerHTML = '<span class="spinner-border spinner-border-sm text-primary"></span>';
+            } else if (status === 'completed') {
+                statusDiv.innerHTML = '<i class="bi bi-check-circle text-success"></i>';
+            } else if (status === 'error') {
+                statusDiv.innerHTML = '<i class="bi bi-x-circle text-danger"></i>';
+            } else {
+                statusDiv.innerHTML = '';
+            }
+        }
+
+        function resetProgress() {
+            const steps = ['ingestion', 'eda', 'preprocessing', 'model_selection', 'training', 'evaluation'];
+            steps.forEach(step => updateStepStatus(step, 'waiting'));
+            document.getElementById('pipelineTime').textContent = '';
+        }
+
+        function resetButton() {
+            document.getElementById('runPipelineBtn').disabled = false;
+            document.getElementById('runPipelineBtn').innerHTML = '<i class="bi bi-play-fill me-2"></i>Run AI Pipeline';
+        }
+
+        function displayResults(result) {
+            document.getElementById('resultsSection').classList.add('show');
+            
+            // Summary stats
+            const models = result.trained_models || result.models || [];
+            const evaluation = result.evaluation || {};
+            const isRegression = result.problem_type === 'regression';
+            
+            document.getElementById('totalModels').textContent = models.length || Object.keys(result.model_results || {}).length || '3';
+            document.getElementById('problemType').textContent = (result.problem_type || 'classification').toUpperCase();
+            
+            // Best score (handle regression vs classification)
+            let bestScore = isRegression ? -Infinity : 0;
+            let bestFeatureImportance = null;
+            if (result.model_results) {
+                Object.values(result.model_results).forEach(m => {
+                    if (m.cv_score > bestScore) {
+                        bestScore = m.cv_score;
+                        bestFeatureImportance = m.feature_importance;
+                    }
+                });
+            }
+            
+            // Display score appropriately
+            if (isRegression) {
+                document.getElementById('bestAccuracy').textContent = bestScore.toFixed(4);
+                document.getElementById('bestScoreLabel').textContent = 'Best R² Score';
+            } else {
+                document.getElementById('bestAccuracy').textContent = (bestScore * 100).toFixed(1) + '%';
+                document.getElementById('bestScoreLabel').textContent = 'Best Accuracy';
+            }
+            
+            // Model cards
+            const modelCardsDiv = document.getElementById('modelCards');
+            modelCardsDiv.innerHTML = '';
+            
+            if (result.model_results) {
+                let bestModel = result.best_model || '';
+                Object.entries(result.model_results).forEach(([name, metrics]) => {
+                    const isBest = name === bestModel;
+                    const card = document.createElement('div');
+                    card.className = `model-card ${isBest ? 'best' : ''}`;
+                    
+                    let tuningBadge = '';
+                    if (metrics.tuned) {
+                        tuningBadge = '<span class="badge bg-info ms-2">Tuned</span>';
+                    }
+                    
+                    // Check if this is regression (R² scores can be negative or > 1)
+                    const isRegression = result.problem_type === 'regression';
+                    let cvScoreDisplay, testScoreDisplay;
+                    
+                    if (isRegression) {
+                        // For regression, show R² directly (not as percentage)
+                        cvScoreDisplay = `R² CV: ${metrics.cv_score.toFixed(4)}`;
+                        testScoreDisplay = `R² Test: ${metrics.test_score.toFixed(4)}`;
+                    } else {
+                        // For classification, show as percentage
+                        cvScoreDisplay = `CV Score: ${(metrics.cv_score * 100).toFixed(2)}%`;
+                        testScoreDisplay = `Test Score: ${(metrics.test_score * 100).toFixed(2)}%`;
+                    }
+                    
+                    card.innerHTML = `
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <h6 class="mb-0">
+                                ${isBest ? '<i class="bi bi-trophy-fill text-warning me-2"></i>' : ''}
+                                ${formatModelName(name)}
+                                ${tuningBadge}
+                            </h6>
+                            ${isBest ? '<span class="badge bg-success">Best Model</span>' : ''}
+                        </div>
+                        <div>
+                            <span class="metric-badge accuracy">${cvScoreDisplay}</span>
+                            <span class="metric-badge precision">${testScoreDisplay}</span>
+                            <span class="metric-badge recall">Time: ${metrics.training_time?.toFixed(3) || '0.01'}s</span>
+                        </div>
+                    `;
+                    modelCardsDiv.appendChild(card);
+                });
+            }
+            
+            // Feature Importance
+            if (bestFeatureImportance) {
+                displayFeatureImportance(bestFeatureImportance);
+            }
+            
+            // Show model action buttons
+            document.getElementById('downloadModelBtn').style.display = 'inline-block';
+            document.getElementById('openPredictBtn').style.display = 'inline-block';
+            
+            // Load Dashboard
+            loadDashboard();
+            
+            // AI Insights
+            const insightsDiv = document.getElementById('aiInsights');
+            let insightsHtml = '';
+            
+            // Handle insights - could be string or object
+            let rawInsights = evaluation.insights || evaluation.ai_insights;
+            if (rawInsights) {
+                if (typeof rawInsights === 'object') {
+                    // Convert object to readable HTML
+                    insightsHtml = '<ul class="list-unstyled mb-0">';
+                    for (const [key, value] of Object.entries(rawInsights)) {
+                        const formattedKey = key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+                        if (typeof value === 'object') {
+                            insightsHtml += `<li class="mb-2"><strong>${formattedKey}:</strong><ul>`;
+                            for (const [subKey, subVal] of Object.entries(value)) {
+                                insightsHtml += `<li>${subKey}: ${subVal}</li>`;
+                            }
+                            insightsHtml += '</ul></li>';
+                        } else {
+                            insightsHtml += `<li class="mb-2"><i class="bi bi-check-circle me-2" style="color: var(--accent-success);"></i><strong>${formattedKey}:</strong> ${value}</li>`;
+                        }
+                    }
+                    insightsHtml += '</ul>';
+                } else {
+                    insightsHtml = `<p style="color: var(--text-primary);">${rawInsights}</p>`;
+                }
+            } else {
+                // Default insights
+                const modelCount = Object.keys(result.model_results || {}).length || 3;
+                const bestModel = formatModelName(result.best_model || 'logistic_regression');
+                const problemType = result.problem_type || 'classification';
+                insightsHtml = `
+                    <div style="color: var(--text-primary);">
+                        <p class="mb-3"><i class="bi bi-check-circle me-2" style="color: var(--accent-success);"></i><strong>Pipeline completed successfully!</strong></p>
+                        <ul class="mb-0">
+                            <li class="mb-2"><i class="bi bi-diagram-3 me-2" style="color: var(--accent-primary);"></i>Trained <strong>${modelCount}</strong> models</li>
+                            <li class="mb-2"><i class="bi bi-trophy me-2" style="color: var(--accent-warning);"></i>Best model: <strong>${bestModel}</strong></li>
+                            <li><i class="bi bi-gear me-2" style="color: var(--accent-info);"></i>Problem type: <strong>${problemType}</strong></li>
+                        </ul>
+                    </div>
+                `;
+            }
+            insightsDiv.innerHTML = insightsHtml;
+        }
+
+        function formatModelName(name) {
+            const names = {
+                'logistic_regression': 'Logistic Regression',
+                'random_forest': 'Random Forest',
+                'knn': 'K-Nearest Neighbors',
+                'xgboost': 'XGBoost',
+                'gradient_boosting': 'Gradient Boosting',
+                'svm': 'Support Vector Machine',
+                'linear_regression': 'Linear Regression',
+                'ridge': 'Ridge Regression',
+                'lasso': 'Lasso Regression'
+            };
+            return names[name] || name.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+        }
+
+        function addLog(message, type = 'info') {
+            const logDiv = document.getElementById('logOutput');
+            const time = new Date().toLocaleTimeString();
+            const line = document.createElement('div');
+            line.className = `log-line ${type}`;
+            line.innerHTML = `<span class="text-muted">[${time}]</span> ${message}`;
+            logDiv.appendChild(line);
+            logDiv.scrollTop = logDiv.scrollHeight;
+        }
+        
+        // EDA Functions
+        function displayEdaResults(edaData) {
+            const edaCard = document.getElementById('edaCard');
+            edaCard.style.display = 'block';
+            
+            // Basic stats
+            if (edaData.basic_stats) {
+                document.getElementById('edaRows').textContent = edaData.basic_stats.shape?.rows || '-';
+                document.getElementById('edaCols').textContent = edaData.basic_stats.shape?.columns || '-';
+            }
+            
+            // Quality report
+            if (edaData.quality_report) {
+                document.getElementById('edaQuality').textContent = (edaData.quality_report.overall_score || 0) + '%';
+                document.getElementById('edaMissing').textContent = edaData.quality_report.missing_values?.total_missing || 0;
+            }
+            
+            // Store visualizations
+            if (edaData.visualizations) {
+                edaVisualizations = edaData.visualizations;
+                
+                // Show first available chart
+                if (edaVisualizations.correlation_heatmap) {
+                    showEdaChart('correlation');
+                } else if (edaVisualizations.distributions) {
+                    showEdaChart('distribution');
+                } else if (edaVisualizations.boxplots) {
+                    showEdaChart('boxplot');
+                }
+            }
+        }
+        
+        function showEdaChart(type) {
+            const chartImg = document.getElementById('edaChart');
+            const tabs = document.querySelectorAll('#edaTabs .nav-link');
+            
+            tabs.forEach(tab => tab.classList.remove('active'));
+            
+            let base64Data = '';
+            switch(type) {
+                case 'correlation':
+                    base64Data = edaVisualizations.correlation_heatmap;
+                    tabs[0].classList.add('active');
+                    break;
+                case 'distribution':
+                    base64Data = edaVisualizations.distributions;
+                    tabs[1].classList.add('active');
+                    break;
+                case 'boxplot':
+                    base64Data = edaVisualizations.boxplots;
+                    tabs[2].classList.add('active');
+                    break;
+            }
+            
+            if (base64Data) {
+                chartImg.src = 'data:image/png;base64,' + base64Data;
+                chartImg.style.display = 'block';
+            } else {
+                chartImg.style.display = 'none';
+            }
+        }
+        
+        function toggleEdaDetails() {
+            const body = document.getElementById('edaBody');
+            const icon = document.getElementById('edaToggleIcon');
+            if (body.style.display === 'none') {
+                body.style.display = 'block';
+                icon.className = 'bi bi-chevron-down';
+            } else {
+                body.style.display = 'none';
+                icon.className = 'bi bi-chevron-up';
+            }
+        }
+        
+        // Feature Importance
+        function displayFeatureImportance(importance) {
+            if (!importance || Object.keys(importance).length === 0) return;
+            
+            const section = document.getElementById('featureImportanceSection');
+            const container = document.getElementById('featureImportance');
+            section.style.display = 'block';
+            
+            // Sort by importance
+            const sorted = Object.entries(importance).sort((a, b) => b[1] - a[1]);
+            
+            container.innerHTML = sorted.map(([feature, score]) => {
+                const pct = (score * 100).toFixed(1);
+                return `
+                    <div class="d-flex align-items-center mb-2">
+                        <span class="me-2" style="min-width: 120px; font-size: 0.85rem;">${feature}</span>
+                        <div class="progress flex-grow-1" style="height: 8px;">
+                            <div class="progress-bar" role="progressbar" style="width: ${pct}%; background: var(--primary-gradient);"></div>
+                        </div>
+                        <span class="ms-2 text-muted" style="min-width: 50px;">${pct}%</span>
+                    </div>
+                `;
+            }).join('');
+        }
+        
+        // Model Download
+        function downloadModel() {
+            if (!currentPipelineId) {
+                alert('No pipeline results available');
+                return;
+            }
+            window.location.href = `/pipeline/${currentPipelineId}/model/download`;
+        }
+        
+        // Prediction Functions
+        function showPredictionModal() {
+            const modal = new bootstrap.Modal(document.getElementById('predictionModal'));
+            modal.show();
+        }
+        
+        function switchPredictTab(type) {
+            document.getElementById('jsonTab').classList.toggle('active', type === 'json');
+            document.getElementById('fileTab').classList.toggle('active', type === 'file');
+            document.getElementById('jsonInputSection').style.display = type === 'json' ? 'block' : 'none';
+            document.getElementById('fileInputSection').style.display = type === 'file' ? 'block' : 'none';
+        }
+        
+        async function makePrediction() {
+            if (!currentPipelineId) {
+                alert('No pipeline results available');
+                return;
+            }
+            
+            try {
+                let response;
+                
+                const jsonInput = document.getElementById('predictionInput').value.trim();
+                const fileInput = document.getElementById('predictionFile');
+                
+                if (fileInput.files.length > 0) {
+                    // Upload file
+                    const formData = new FormData();
+                    formData.append('file', fileInput.files[0]);
+                    
+                    response = await fetch(`/pipeline/${currentPipelineId}/predict`, {
+                        method: 'POST',
+                        body: formData
+                    });
+                } else if (jsonInput) {
+                    // JSON input
+                    const data = JSON.parse(jsonInput);
+                    
+                    response = await fetch(`/pipeline/${currentPipelineId}/predict`, {
+                        method: 'POST',
+                        headers: {'Content-Type': 'application/json'},
+                        body: JSON.stringify({data: Array.isArray(data) ? data : [data]})
+                    });
+                } else {
+                    alert('Please provide input data');
+                    return;
+                }
+                
+                const result = await response.json();
+                
+                document.getElementById('predictionResult').style.display = 'block';
+                document.getElementById('predictionOutput').textContent = JSON.stringify(result, null, 2);
+                
+            } catch (e) {
+                alert('Error making prediction: ' + e.message);
+            }
+        }
+        
+        // Dashboard Functions
+        let dashboardCharts = {};
+        
+        async function loadDashboard() {
+            if (!currentPipelineId) return;
+            
+            try {
+                const response = await fetch(`/pipeline/${currentPipelineId}/dashboard`);
+                if (!response.ok) return;
+                
+                const data = await response.json();
+                displayDashboard(data);
+                
+            } catch (e) {
+                console.log('Dashboard load error:', e);
+            }
+        }
+        
+        function refreshDashboard() {
+            loadDashboard();
+        }
+        
+        function downloadDashboard() {
+            if (!currentPipelineId) {
+                alert('No pipeline results available');
+                return;
+            }
+            window.location.href = `/pipeline/${currentPipelineId}/dashboard/download`;
+        }
+        
+        function displayDashboard(data) {
+            document.getElementById('dashboardCard').style.display = 'block';
+            
+            // Stats
+            document.getElementById('dashRows').textContent = data.stats?.rows || '-';
+            document.getElementById('dashCols').textContent = data.stats?.columns || '-';
+            document.getElementById('dashMissing').textContent = data.stats?.missing_total || '0';
+            document.getElementById('dashMemory').textContent = data.stats?.memory_mb || '-';
+            
+            // Target Distribution Chart
+            if (data.target_distribution) {
+                renderPieChart('targetChart', data.target_distribution.labels, data.target_distribution.values, 'Target Distribution');
+            }
+            
+            // Model Comparison Chart
+            if (data.model_summary && data.model_summary.models.length > 0) {
+                const modelNames = data.model_summary.models.map(m => formatModelName(m.name));
+                const cvScores = data.model_summary.models.map(m => (m.cv_score * 100).toFixed(1));
+                const testScores = data.model_summary.models.map(m => (m.test_score * 100).toFixed(1));
+                renderBarChart('modelChart', modelNames, cvScores, testScores);
+            }
+            
+            // Correlation Grid
+            if (data.correlations && data.correlations.matrix) {
+                renderCorrelationGrid(data.correlations);
+            }
+            
+            // Distribution Charts
+            if (data.distributions) {
+                renderDistributionCharts(data.distributions);
+            }
+            
+            // Stats Table
+            if (data.numeric_stats) {
+                renderStatsTable(data.numeric_stats);
+            }
+        }
+        
+        function renderPieChart(canvasId, labels, values, title) {
+            const ctx = document.getElementById(canvasId);
+            if (!ctx) return;
+            
+            if (dashboardCharts[canvasId]) {
+                dashboardCharts[canvasId].destroy();
+            }
+            
+            const colors = ['#667eea', '#38ef7d', '#f093fb', '#f5576c', '#4facfe', '#00f2fe', '#43e97b', '#fa709a'];
+            
+            dashboardCharts[canvasId] = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        data: values,
+                        backgroundColor: colors.slice(0, labels.length),
+                        borderWidth: 0
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'right',
+                            labels: { color: '#fff' }
+                        }
+                    }
+                }
+            });
+        }
+        
+        function renderBarChart(canvasId, labels, cvScores, testScores) {
+            const ctx = document.getElementById(canvasId);
+            if (!ctx) return;
+            
+            if (dashboardCharts[canvasId]) {
+                dashboardCharts[canvasId].destroy();
+            }
+            
+            dashboardCharts[canvasId] = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [
+                        {
+                            label: 'CV Score %',
+                            data: cvScores,
+                            backgroundColor: 'rgba(102, 126, 234, 0.8)'
+                        },
+                        {
+                            label: 'Test Score %',
+                            data: testScores,
+                            backgroundColor: 'rgba(56, 239, 125, 0.8)'
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: { 
+                            beginAtZero: true, 
+                            max: 100,
+                            ticks: { color: '#aaa' },
+                            grid: { color: 'rgba(255,255,255,0.1)' }
+                        },
+                        x: { 
+                            ticks: { color: '#aaa' },
+                            grid: { display: false }
+                        }
+                    },
+                    plugins: {
+                        legend: { labels: { color: '#fff' } }
+                    }
+                }
+            });
+        }
+        
+        function renderCorrelationGrid(correlations) {
+            const container = document.getElementById('correlationGrid');
+            if (!container) return;
+            
+            const cols = correlations.columns;
+            const matrix = correlations.matrix;
+            
+            let html = '<table class="table table-sm text-center" style="font-size: 0.8rem;">';
+            html += '<thead><tr><th></th>';
+            cols.forEach(c => html += `<th style="color: #aaa;">${c.substring(0, 8)}</th>`);
+            html += '</tr></thead><tbody>';
+            
+            matrix.forEach((row, i) => {
+                html += `<tr><td style="color: #aaa;"><strong>${cols[i].substring(0, 8)}</strong></td>`;
+                row.forEach(val => {
+                    const color = val > 0.5 ? 'rgba(56, 239, 125, 0.7)' : 
+                                  val < -0.5 ? 'rgba(245, 87, 108, 0.7)' : 
+                                  'rgba(255,255,255,0.1)';
+                    html += `<td style="background: ${color}; color: #fff;">${val}</td>`;
+                });
+                html += '</tr>';
+            });
+            html += '</tbody></table>';
+            
+            container.innerHTML = html;
+        }
+        
+        function renderDistributionCharts(distributions) {
+            const container = document.getElementById('distributionCharts');
+            if (!container) return;
+            
+            container.innerHTML = '';
+            
+            Object.entries(distributions).slice(0, 4).forEach(([col, data], idx) => {
+                const colDiv = document.createElement('div');
+                colDiv.className = 'col-md-6 mb-3';
+                colDiv.innerHTML = `
+                    <div class="p-2" style="background: rgba(0,0,0,0.2); border-radius: 8px;">
+                        <small class="text-muted">${col}</small>
+                        <canvas id="dist-${idx}" height="100"></canvas>
+                    </div>
+                `;
+                container.appendChild(colDiv);
+                
+                setTimeout(() => {
+                    const ctx = document.getElementById(`dist-${idx}`);
+                    if (ctx) {
+                        new Chart(ctx, {
+                            type: 'bar',
+                            data: {
+                                labels: data.bins.slice(0, -1).map(b => b.toFixed(1)),
+                                datasets: [{
+                                    data: data.values,
+                                    backgroundColor: 'rgba(102, 126, 234, 0.6)',
+                                    borderWidth: 0
+                                }]
+                            },
+                            options: {
+                                responsive: true,
+                                maintainAspectRatio: false,
+                                plugins: { legend: { display: false } },
+                                scales: {
+                                    y: { display: false },
+                                    x: { 
+                                        ticks: { color: '#666', maxTicksLimit: 5, font: { size: 9 } },
+                                        grid: { display: false }
+                                    }
+                                }
+                            }
+                        });
+                    }
+                }, 100);
+            });
+        }
+        
+        function renderStatsTable(numericStats) {
+            const tbody = document.getElementById('statsTableBody');
+            if (!tbody) return;
+            
+            tbody.innerHTML = '';
+            
+            Object.entries(numericStats).forEach(([col, stats]) => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${col}</td>
+                    <td>${stats.mean}</td>
+                    <td>${stats.std}</td>
+                    <td>${stats.min}</td>
+                    <td>${stats.max}</td>
+                    <td>${stats.median}</td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+        
+        // ===========================================
+        // TIME SERIES FORECASTING FUNCTIONS
+        // ===========================================
+        
+        let forecastFile = null;
+        let currentForecastData = null;
+        
+        // Forecast upload zone
+        document.getElementById('forecastUploadZone')?.addEventListener('click', () => {
+            document.getElementById('forecastFileInput').click();
+        });
+        
+        document.getElementById('forecastFileInput')?.addEventListener('change', (e) => {
+            if (e.target.files.length > 0) {
+                forecastFile = e.target.files[0];
+                document.getElementById('forecastFileName').textContent = forecastFile.name;
+                document.getElementById('forecastUploadZone').style.display = 'none';
+                document.getElementById('forecastFileInfo').style.display = 'block';
+            }
+        });
+        
+        function clearForecastFile() {
+            forecastFile = null;
+            document.getElementById('forecastFileInput').value = '';
+            document.getElementById('forecastUploadZone').style.display = 'flex';
+            document.getElementById('forecastFileInfo').style.display = 'none';
+        }
+        
+        async function runForecast() {
+            if (!forecastFile) {
+                alert('Please upload a time series CSV file');
+                return;
+            }
+            
+            const dateColumn = document.getElementById('dateColumn').value;
+            const targetColumn = document.getElementById('forecastTarget').value;
+            const forecastPeriods = document.getElementById('forecastPeriods').value;
+            const frequency = document.getElementById('forecastFrequency').value;
+            
+            if (!targetColumn) {
+                alert('Please specify the target column to forecast');
+                return;
+            }
+            
+            const btn = document.getElementById('runForecastBtn');
+            btn.disabled = true;
+            btn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Forecasting...';
+            
+            const formData = new FormData();
+            formData.append('file', forecastFile);
+            formData.append('date_column', dateColumn);
+            formData.append('target_column', targetColumn);
+            formData.append('forecast_periods', forecastPeriods);
+            formData.append('frequency', frequency);
+            
+            try {
+                const response = await fetch('/forecast/run', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    displayForecastResults(data);
+                } else {
+                    alert('Forecast failed: ' + (data.error || 'Unknown error'));
+                }
+            } catch (error) {
+                console.error('Forecast error:', error);
+                alert('Forecast failed: ' + error.message);
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="bi bi-graph-up me-2"></i>Run Forecast';
+            }
+        }
+        
+        function displayForecastResults(data) {
+            currentForecastData = data;
+            
+            document.getElementById('forecastPlaceholder').style.display = 'none';
+            document.getElementById('forecastResults').style.display = 'block';
+            
+            // Analysis stats
+            const analysis = data.analysis || {};
+            document.getElementById('tsLength').textContent = analysis.length || '-';
+            document.getElementById('tsTrend').textContent = (analysis.trend || 'unknown').charAt(0).toUpperCase() + (analysis.trend || 'unknown').slice(1);
+            document.getElementById('tsMean').textContent = typeof analysis.mean === 'number' ? analysis.mean.toFixed(2) : '-';
+            document.getElementById('tsStd').textContent = typeof analysis.std === 'number' ? analysis.std.toFixed(2) : '-';
+            
+            // Model cards
+            const modelCardsDiv = document.getElementById('forecastModelCards');
+            modelCardsDiv.innerHTML = '';
+            
+            const bestModel = data.best_model || '';
+            Object.entries(data.model_results || {}).forEach(([name, metrics]) => {
+                if (metrics.error) return;
+                
+                const isBest = name === bestModel;
+                const card = document.createElement('div');
+                card.className = `model-card ${isBest ? 'best' : ''}`;
+                card.innerHTML = `
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <h6 class="mb-0" style="color: var(--text-primary);">
+                            ${isBest ? '<i class="bi bi-trophy-fill me-2" style="color: var(--accent-warning);"></i>' : ''}
+                            ${name.replace(/_/g, ' ').replace(/\\b\\w/g, l => l.toUpperCase())}
+                        </h6>
+                        ${isBest ? '<span class="badge" style="background: var(--gradient-success);">Best Model</span>' : ''}
+                    </div>
+                    <div>
+                        <span class="metric-badge accuracy"><i class="bi bi-graph-down-arrow me-1"></i>RMSE: ${metrics.rmse?.toFixed(4) || 'N/A'}</span>
+                        <span class="metric-badge precision"><i class="bi bi-arrows-collapse me-1"></i>MAE: ${metrics.mae?.toFixed(4) || 'N/A'}</span>
+                        <span class="metric-badge recall"><i class="bi bi-clock me-1"></i>Time: ${metrics.training_time?.toFixed(3) || '0'}s</span>
+                    </div>
+                `;
+                modelCardsDiv.appendChild(card);
+            });
+            
+            // Forecast chart
+            renderForecastChart(data.visualization);
+            
+            // Forecast table
+            const tbody = document.getElementById('forecastTableBody');
+            tbody.innerHTML = '';
+            
+            const forecastVals = data.forecast || [];
+            forecastVals.forEach((val, i) => {
+                const row = document.createElement('tr');
+                row.innerHTML = `<td>Period ${i + 1}</td><td>${typeof val === 'number' ? val.toFixed(2) : val}</td>`;
+                tbody.appendChild(row);
+            });
+        }
+        
+        function renderForecastChart(vizData) {
+            if (!vizData) return;
+            
+            const ctx = document.getElementById('forecastChart');
+            if (!ctx) return;
+            
+            if (forecastChart) {
+                forecastChart.destroy();
+            }
+            
+            const historical = vizData.historical || {};
+            const forecast = vizData.forecast || {};
+            
+            // Combine labels
+            const allLabels = [...(historical.dates || []), ...(forecast.dates || [])];
+            const historicalValues = historical.values || [];
+            const forecastValues = forecast.values || [];
+            
+            // Create datasets
+            const historicalData = [...historicalValues, ...Array(forecastValues.length).fill(null)];
+            const forecastData = [...Array(historicalValues.length - 1).fill(null), historicalValues[historicalValues.length - 1], ...forecastValues];
+            
+            // Get current theme colors
+            const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+            const textColor = isDark ? '#f1f5f9' : '#0f172a';
+            const gridColor = isDark ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)';
+            
+            forecastChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: allLabels.map(d => {
+                        try {
+                            return new Date(d).toLocaleDateString();
+                        } catch {
+                            return d;
+                        }
+                    }),
+                    datasets: [
+                        {
+                            label: 'Historical',
+                            data: historicalData,
+                            borderColor: '#6366f1',
+                            backgroundColor: 'rgba(99, 102, 241, 0.1)',
+                            fill: true,
+                            tension: 0.4,
+                            pointBackgroundColor: '#6366f1',
+                            pointRadius: 2
+                        },
+                        {
+                            label: 'Forecast',
+                            data: forecastData,
+                            borderColor: '#10b981',
+                            backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                            borderDash: [5, 5],
+                            fill: true,
+                            tension: 0.4,
+                            pointBackgroundColor: '#10b981',
+                            pointRadius: 3
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    interaction: {
+                        intersect: false,
+                        mode: 'index'
+                    },
+                    plugins: {
+                        legend: {
+                            labels: { 
+                                color: textColor,
+                                font: { weight: '600' }
+                            }
+                        },
+                        tooltip: {
+                            backgroundColor: isDark ? 'rgba(15, 15, 35, 0.9)' : 'rgba(255, 255, 255, 0.9)',
+                            titleColor: textColor,
+                            bodyColor: textColor,
+                            borderColor: gridColor,
+                            borderWidth: 1
+                        }
+                    },
+                    scales: {
+                        x: {
+                            ticks: { color: textColor, maxTicksLimit: 10, font: { weight: '500' } },
+                            grid: { color: gridColor }
+                        },
+                        y: {
+                            ticks: { color: textColor, font: { weight: '500' } },
+                            grid: { color: gridColor }
+                        }
+                    }
+                }
+            });
+        }
+        
+        function downloadForecast() {
+            if (!currentForecastData || !currentForecastData.forecast) {
+                alert('No forecast data available');
+                return;
+            }
+            
+            const forecast = currentForecastData.forecast;
+            let csv = 'Period,Forecast\n';
+            forecast.forEach((val, i) => {
+                csv += `${i + 1},${val}\n`;
+            });
+            
+            const blob = new Blob([csv], { type: 'text/csv' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'forecast_results.csv';
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+        
+        // ===========================================
+        // TAB NAVIGATION FUNCTIONS
+        // ===========================================
+        
+        function initializeTabs() {
+            // Initialize tab switching
+            document.querySelectorAll('.nav-link').forEach(tab => {
+                tab.addEventListener('click', function() {
+                    const targetId = this.getAttribute('data-bs-target');
+                    const tabId = this.getAttribute('id');
+                    
+                    // Force show the target tab content
+                    document.querySelectorAll('.tab-pane').forEach(pane => {
+                        pane.classList.remove('show', 'active');
+                    });
+                    
+                    const targetPane = document.querySelector(targetId);
+                    if (targetPane) {
+                        targetPane.classList.add('show', 'active');
+                    }
+                });
+            });
+        }
+    </script>
+</body>
+</html>
