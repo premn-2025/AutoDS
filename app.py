@@ -899,11 +899,13 @@ def generate_dashboard_html(df, target_column, run, pipeline_id):
         ai_insights = training.get('ai_insights') or {}
         if ai_insights.get('best_model_analysis'):
             notes.append(f'<p>{esc(ai_insights["best_model_analysis"])}</p>')
-        eval_best = (evaluation.get('comparison') or {}).get('best_model')
-        if eval_best and eval_best != best_model:
-            notes.append(f'<p class="muted">Note: the model was selected on cross-validation score. '
-                         f'On the held-out test set, <b>{pretty(eval_best)}</b> scored highest by '
-                         f'{esc((evaluation.get("comparison") or {}).get("primary_metric", "the primary metric"))}.</p>')
+        comparison = evaluation.get('comparison') or {}
+        test_leader = comparison.get('test_set_leader')
+        if test_leader and test_leader != best_model:
+            notes.append(f'<p class="muted">Selected on cross-validation score, which avoids overfitting to the test set. '
+                         f'On the held-out test set, <b>{pretty(test_leader)}</b> scored higher by '
+                         f'{esc(comparison.get("primary_metric", "the primary metric"))}; on small datasets these '
+                         f'rankings often differ, so collecting more data would make the choice more reliable.</p>')
         if insights.get('strengths'):
             notes.append('<h3>Strengths</h3>' + bullet_list(as_list(insights['strengths'])))
         if insights.get('weaknesses'):

@@ -336,6 +336,7 @@ class OrchestratorAgent(BaseAgent):
                 'trained_models': step_data.get('trained_models', {}),
                 'test_data': step_data.get('test_data'),
                 'problem_type': step_data.get('problem_type'),
+                'selected_model': step_data.get('best_model'),
                 'target_column': config.get('target_column')
             }
         

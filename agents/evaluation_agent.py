@@ -50,6 +50,7 @@ class EvaluationAgent(BaseAgent):
         problem_type = input_data.get('problem_type', 'classification')
         training_metrics = input_data.get('training_metrics', {})
         target_column = input_data.get('target_column', 'target')
+        selected_model = input_data.get('selected_model')
         
         if not trained_models:
             raise ValueError("No trained models provided for evaluation")
@@ -85,6 +86,17 @@ class EvaluationAgent(BaseAgent):
         
         # Compare models
         comparison = self._compare_models(evaluation_results, problem_type)
+        
+        # The model is selected on cross-validation score during training. Re-selecting
+        # on the test set would leak test data into model selection, so the test-set
+        # ranking is reported for information only.
+        comparison['test_set_leader'] = comparison.get('best_model')
+        if selected_model in evaluation_results and 'error' not in evaluation_results[selected_model]:
+            comparison['best_model'] = selected_model
+            comparison['best_score'] = evaluation_results[selected_model].get(comparison['primary_metric'], 0)
+            comparison['selection_method'] = 'cross_validation'
+        else:
+            comparison['selection_method'] = 'test_set'
         
         # Generate AI insights
         insights = self._generate_insights(
