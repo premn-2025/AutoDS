@@ -545,7 +545,7 @@ def get_dashboard_data(pipeline_id: str):
         }), 404
     
     try:
-        df = pd.read_csv(file_path)
+        df = read_data_file(file_path)
         target_column = run.get('target_column')
         
         # Basic Statistics
@@ -687,7 +687,7 @@ def download_dashboard(pipeline_id: str):
         return jsonify({'error': 'Data file not found'}), 404
     
     try:
-        df = pd.read_csv(file_path)
+        df = read_data_file(file_path)
         target_column = run.get('target_column')
         
         # Generate HTML report
@@ -706,205 +706,477 @@ def download_dashboard(pipeline_id: str):
         return jsonify({'error': str(e)}), 500
 
 
+def read_data_file(file_path: str):
+    """Load an uploaded dataset based on its file extension."""
+    import pandas as pd
+
+    ext = file_path.rsplit('.', 1)[-1].lower()
+    if ext in ('xlsx', 'xls'):
+        return pd.read_excel(file_path)
+    if ext == 'parquet':
+        return pd.read_parquet(file_path)
+    if ext == 'json':
+        return pd.read_json(file_path)
+    return pd.read_csv(file_path)
+
+
+REPORT_CSS = """
+:root {
+    --bg: #f5f6fa; --surface: #ffffff; --surface-alt: #f0f2f8; --border: #e1e4ee;
+    --text: #1d2233; --muted: #5d6478; --accent: #5a67d8; --accent-soft: #e9ebfc;
+    --good: #1f9d55; --warn: #c27c0e; --bad: #d64545; --bar: #7c88e6;
+}
+@media (prefers-color-scheme: dark) {
+    :root {
+        --bg: #14161f; --surface: #1d2030; --surface-alt: #252a3d; --border: #30364d;
+        --text: #e8eaf2; --muted: #9aa1b8; --accent: #8b96f0; --accent-soft: #2a2f4a;
+        --good: #48c78e; --warn: #f0b429; --bad: #f07178; --bar: #8b96f0;
+    }
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--text);
+       font: 14px/1.55 -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; }
+.wrap { max-width: 1100px; margin: 0 auto; padding: 0 16px 48px; }
+header.report { background: linear-gradient(135deg, #5a67d8 0%, #764ba2 100%); color: #fff; padding: 32px 0 28px; margin-bottom: 24px; }
+header.report h1 { margin: 0 0 6px; font-size: 26px; }
+header.report .meta { display: flex; flex-wrap: wrap; gap: 6px 22px; opacity: .92; font-size: 13px; }
+header.report .meta b { font-weight: 600; }
+h2 { font-size: 17px; margin: 0 0 14px; }
+h3 { font-size: 14px; margin: 18px 0 8px; color: var(--muted); text-transform: uppercase; letter-spacing: .04em; }
+section.card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 20px 22px; margin-bottom: 20px; break-inside: avoid; }
+.kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; margin-bottom: 20px; }
+.kpi { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 14px 16px; }
+.kpi .v { font-size: 24px; font-weight: 700; }
+.kpi .l { color: var(--muted); font-size: 12px; text-transform: uppercase; letter-spacing: .04em; }
+.summary { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 2fr); gap: 20px; }
+.best { background: var(--accent-soft); border-radius: 10px; padding: 16px; }
+.best .name { font-size: 22px; font-weight: 700; color: var(--accent); }
+.best .score { font-size: 32px; font-weight: 700; margin-top: 4px; }
+.badge { display: inline-block; padding: 2px 9px; border-radius: 999px; font-size: 11px; font-weight: 600; letter-spacing: .03em; }
+.badge.good { background: rgba(31,157,85,.15); color: var(--good); }
+.badge.warn { background: rgba(194,124,14,.15); color: var(--warn); }
+.badge.bad { background: rgba(214,69,69,.15); color: var(--bad); }
+.badge.accent { background: var(--accent-soft); color: var(--accent); }
+.table-wrap { overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; font-size: 13px; font-variant-numeric: tabular-nums; }
+th, td { padding: 7px 10px; border-bottom: 1px solid var(--border); text-align: left; white-space: nowrap; }
+th { color: var(--muted); font-weight: 600; font-size: 12px; background: var(--surface-alt); }
+td.num, th.num { text-align: right; }
+tr.is-best td { background: var(--accent-soft); font-weight: 600; }
+ul { margin: 6px 0 0; padding-left: 20px; }
+li { margin-bottom: 4px; }
+.cols { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px; }
+.bar-row { display: grid; grid-template-columns: minmax(90px, 160px) 1fr 56px; gap: 10px; align-items: center; margin-bottom: 6px; font-size: 13px; }
+.bar-row .label { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.bar-track { background: var(--surface-alt); border-radius: 4px; height: 12px; }
+.bar-fill { background: var(--bar); border-radius: 4px; height: 12px; }
+.bar-row .val { text-align: right; color: var(--muted); font-variant-numeric: tabular-nums; }
+.cm td { text-align: center; min-width: 52px; }
+.chart { margin: 0 0 16px; }
+.chart img { display: block; max-width: 100%; max-height: 520px; width: auto; height: auto; border-radius: 8px; background: #fff; border: 1px solid var(--border); }
+.chart figcaption { color: var(--muted); font-size: 12px; margin-top: 6px; }
+.muted { color: var(--muted); }
+footer { text-align: center; color: var(--muted); font-size: 12px; padding-top: 12px; }
+@media (max-width: 720px) { .summary { grid-template-columns: 1fr; } header.report h1 { font-size: 21px; } }
+@media print {
+    body { background: #fff; color: #000; }
+    header.report { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    section.card, .kpi { border-color: #ccc; }
+    .table-wrap { overflow: visible; }
+    th, td { white-space: normal; }
+}
+"""
+
+
 def generate_dashboard_html(df, target_column, run, pipeline_id):
-    """Generate a standalone HTML dashboard report."""
+    """Generate a standalone, self-contained HTML analysis report."""
     import numpy as np
+    from html import escape
     from datetime import datetime
+
+    def esc(value) -> str:
+        return escape(str(value))
+
+    def fmt(value, digits=4) -> str:
+        if value is None:
+            return '—'
+        try:
+            value = float(value)
+        except (TypeError, ValueError):
+            return esc(value)
+        if np.isnan(value):
+            return '—'
+        if abs(value) >= 1e6:
+            return f"{value:,.0f}"
+        if abs(value) >= 1000:
+            return f"{value:,.2f}"
+        return f"{value:.{digits}f}"
+
+    def pct(value) -> str:
+        return '—' if value is None else f"{float(value) * 100:.2f}%"
+
+    acronyms = {'Knn': 'KNN', 'Svm': 'SVM', 'Xgboost': 'XGBoost', 'Lightgbm': 'LightGBM', 'Svr': 'SVR'}
     
-    # Basic stats
+    def pretty_raw(name: str) -> str:
+        words = str(name).replace('_', ' ').title().split()
+        return ' '.join(acronyms.get(w, w) for w in words)
+    
+    def pretty(name: str) -> str:
+        return esc(pretty_raw(name))
+
+    def as_list(value):
+        if not value:
+            return []
+        return value if isinstance(value, list) else [value]
+
+    def bullet_list(items) -> str:
+        return '<ul>' + ''.join(f'<li>{esc(i)}</li>' for i in items) + '</ul>'
+
+    # Pipeline results
+    result = run.get('result') or {}
+    results = result.get('results', {}) if isinstance(result, dict) else {}
+    training = results.get('training', {}) or {}
+    evaluation = results.get('evaluation', {}) or {}
+    preprocessing = results.get('preprocessing', {}) or {}
+    model_selection = results.get('model_selection', {}) or {}
+    eda = results.get('eda', {}) or {}
+
+    train_metrics = {k: v for k, v in (training.get('training_metrics') or {}).items()
+                     if isinstance(v, dict) and 'error' not in v}
+    eval_metrics = evaluation.get('evaluation_results') or {}
+    best_model = training.get('best_model', '')
+    problem_type = training.get('problem_type') or model_selection.get('problem_type')
+    if not problem_type and target_column in df.columns:
+        is_numeric_target = np.issubdtype(df[target_column].dtype, np.number)
+        problem_type = 'regression' if is_numeric_target and df[target_column].nunique() >= 20 else 'classification'
+    is_regression = problem_type == 'regression'
+
+    # Map encoded class labels back to their original names
+    class_names = None
+    target_encoder = (preprocessing.get('encoders') or {}).get(target_column)
+    if target_encoder is not None and hasattr(target_encoder, 'classes_'):
+        class_names = [str(c) for c in target_encoder.classes_]
+
+    # Dataset overview
     rows, cols = df.shape
     missing = int(df.isnull().sum().sum())
+    missing_pct = missing / df.size * 100 if df.size else 0
     duplicates = int(df.duplicated().sum())
-    memory_mb = round(df.memory_usage(deep=True).sum() / (1024 * 1024), 2)
-    
-    # Numeric stats
     numeric_df = df.select_dtypes(include=[np.number])
-    numeric_stats_html = ""
-    if not numeric_df.empty:
-        stats_df = numeric_df.describe().round(3).T
-        numeric_stats_html = stats_df.to_html(classes='table table-striped table-sm')
-    
-    # Correlation matrix
-    corr_html = ""
-    if len(numeric_df.columns) >= 2:
-        corr_matrix = numeric_df.corr().round(3)
-        corr_html = corr_matrix.to_html(classes='table table-sm text-center')
-    
+    quality_score = (eda.get('quality_report') or {}).get('overall_score')
+    upload_name = os.path.basename(run.get('file_path', ''))
+    dataset_name = upload_name[len(pipeline_id) + 1:] if upload_name.startswith(f"{pipeline_id}_") else upload_name
+
+    kpis = [
+        (f"{rows:,}", 'Rows'),
+        (f"{cols}", 'Columns'),
+        (f"{missing:,} <span class='muted' style='font-size:13px'>({missing_pct:.1f}%)</span>", 'Missing values'),
+        (f"{duplicates:,}", 'Duplicate rows'),
+    ]
+    if quality_score is not None:
+        kpis.append((f"{float(quality_score):.0f}%", 'Data quality score'))
+    kpi_html = ''.join(f'<div class="kpi"><div class="v">{v}</div><div class="l">{l}</div></div>' for v, l in kpis)
+
+    # Executive summary
+    summary_html = ''
+    if best_model:
+        best_eval = eval_metrics.get(best_model, {})
+        best_train = train_metrics.get(best_model, {})
+        if is_regression:
+            headline_label, headline = 'R² on test set', fmt(best_eval.get('r2', best_train.get('test_score')))
+        else:
+            headline_label, headline = 'Accuracy on test set', pct(best_eval.get('accuracy', best_train.get('test_score')))
+
+        insights = evaluation.get('insights') or {}
+        readiness = insights.get('production_readiness')
+        badge_class = {'HIGH': 'good', 'MEDIUM': 'warn', 'LOW': 'bad'}.get(str(readiness).upper(), 'accent')
+        readiness_html = (f'<div style="margin-top:10px">Production readiness: '
+                          f'<span class="badge {badge_class}">{esc(readiness)}</span></div>') if readiness else ''
+
+        notes = []
+        if insights.get('summary'):
+            notes.append(f'<p style="margin-top:0">{esc(insights["summary"])}</p>')
+        ai_insights = training.get('ai_insights') or {}
+        if ai_insights.get('best_model_analysis'):
+            notes.append(f'<p>{esc(ai_insights["best_model_analysis"])}</p>')
+        eval_best = (evaluation.get('comparison') or {}).get('best_model')
+        if eval_best and eval_best != best_model:
+            notes.append(f'<p class="muted">Note: the model was selected on cross-validation score. '
+                         f'On the held-out test set, <b>{pretty(eval_best)}</b> scored highest by '
+                         f'{esc((evaluation.get("comparison") or {}).get("primary_metric", "the primary metric"))}.</p>')
+        if insights.get('strengths'):
+            notes.append('<h3>Strengths</h3>' + bullet_list(as_list(insights['strengths'])))
+        if insights.get('weaknesses'):
+            notes.append('<h3>Weaknesses</h3>' + bullet_list(as_list(insights['weaknesses'])))
+
+        summary_html = f"""
+        <section class="card">
+            <h2>Executive summary</h2>
+            <div class="summary">
+                <div class="best">
+                    <div class="muted">Best model</div>
+                    <div class="name">{pretty(best_model)}</div>
+                    <div class="score">{headline}</div>
+                    <div class="muted">{headline_label}</div>
+                    {readiness_html}
+                </div>
+                <div>{''.join(notes) or '<p class="muted">No additional insights were generated.</p>'}</div>
+            </div>
+        </section>
+        """
+
+    # Model comparison
+    model_html = ''
+    if train_metrics:
+        if is_regression:
+            eval_cols = [('r2', 'Test R²', fmt), ('mae', 'MAE', fmt), ('rmse', 'RMSE', fmt), ('mape', 'MAPE %', lambda v: fmt(v, 2))]
+            cv_label = 'CV R²'
+        else:
+            eval_cols = [('accuracy', 'Accuracy', pct), ('precision', 'Precision', pct), ('recall', 'Recall', pct),
+                         ('f1', 'F1 score', pct), ('roc_auc', 'ROC AUC', fmt)]
+            cv_label = 'CV accuracy'
+
+        header = (f'<th>Model</th><th class="num">{cv_label} (mean ± std)</th>'
+                  + ''.join(f'<th class="num">{label}</th>' for _, label, _ in eval_cols)
+                  + '<th class="num">Train time</th><th>Tuned</th>')
+        body = ''
+        order = sorted(train_metrics, key=lambda n: train_metrics[n].get('cv_score_mean', float('-inf')), reverse=True)
+        for name in order:
+            m = train_metrics[name]
+            e = eval_metrics.get(name, {})
+            cv_fmt = fmt if is_regression else pct
+            cv_std = m.get('cv_score_std')
+            cv_cell = cv_fmt(m.get('cv_score_mean')) + (f" ± {cv_fmt(cv_std)}" if cv_std is not None else '')
+            if not e:
+                e = {'r2' if is_regression else 'accuracy': m.get('test_score')}
+            cells = ''.join(f'<td class="num">{f(e.get(key))}</td>' for key, _, f in eval_cols)
+            best_badge = ' <span class="badge accent">BEST</span>' if name == best_model else ''
+            body += (f'<tr class="{"is-best" if name == best_model else ""}"><td>{pretty(name)}{best_badge}</td>'
+                     f'<td class="num">{cv_cell}</td>{cells}'
+                     f'<td class="num">{float(m.get("training_time", 0)):.3f}s</td>'
+                     f'<td>{"Yes" if m.get("tuned") else "No"}</td></tr>')
+
+        metric_note = ('R² of 1.0 is a perfect fit; 0 means no better than predicting the mean. MAE/RMSE are in the target\'s units.'
+                       if is_regression else
+                       'Test metrics are weighted averages across classes, computed on the held-out test set.')
+        model_html = f"""
+        <section class="card">
+            <h2>Model comparison</h2>
+            <div class="table-wrap"><table><thead><tr>{header}</tr></thead><tbody>{body}</tbody></table></div>
+            <p class="muted" style="margin-bottom:0">{metric_note}</p>
+        </section>
+        """
+
+    # Best model details: feature importance + confusion matrix / residuals
+    detail_parts = []
+    importance = (train_metrics.get(best_model) or {}).get('feature_importance') or {}
+    if importance:
+        items = sorted(importance.items(), key=lambda kv: abs(kv[1]), reverse=True)[:15]
+        top = max(abs(v) for _, v in items) or 1
+        bars = ''.join(
+            f'<div class="bar-row"><div class="label" title="{esc(k)}">{esc(k)}</div>'
+            f'<div class="bar-track"><div class="bar-fill" style="width:{abs(v) / top * 100:.1f}%"></div></div>'
+            f'<div class="val">{float(v):.3f}</div></div>'
+            for k, v in items)
+        detail_parts.append(f'<div><h3>Feature importance</h3>{bars}</div>')
+
+    best_eval = eval_metrics.get(best_model, {})
+    cm = best_eval.get('confusion_matrix')
+    if cm is not None and not is_regression:
+        cm = np.asarray(cm)
+        labels = class_names if class_names and len(class_names) == len(cm) else [str(i) for i in range(len(cm))]
+        peak = cm.max() or 1
+        head = '<th>Actual \\ Predicted</th>' + ''.join(f'<th>{esc(l)}</th>' for l in labels)
+        body = ''
+        for i, row in enumerate(cm):
+            cells = ''.join(
+                f'<td style="background: rgba(90,103,216,{0.08 + 0.6 * v / peak:.2f})">{int(v)}</td>' for v in row)
+            body += f'<tr><th>{esc(labels[i])}</th>{cells}</tr>'
+        detail_parts.append(f'<div><h3>Confusion matrix (test set)</h3><div class="table-wrap">'
+                            f'<table class="cm"><thead><tr>{head}</tr></thead><tbody>{body}</tbody></table></div></div>')
+
+        report = best_eval.get('classification_report') or {}
+        per_class = [(k, v) for k, v in report.items() if isinstance(v, dict) and k not in ('macro avg', 'weighted avg')]
+        if per_class:
+            def class_label(key):
+                return labels[int(key)] if str(key).isdigit() and int(key) < len(labels) else key
+            rows_html = ''.join(
+                f'<tr><td>{esc(class_label(k))}</td><td class="num">{pct(v.get("precision"))}</td>'
+                f'<td class="num">{pct(v.get("recall"))}</td><td class="num">{pct(v.get("f1-score"))}</td>'
+                f'<td class="num">{int(v.get("support", 0))}</td></tr>' for k, v in per_class)
+            detail_parts.append(
+                '<div><h3>Per-class metrics</h3><div class="table-wrap"><table><thead><tr><th>Class</th>'
+                '<th class="num">Precision</th><th class="num">Recall</th><th class="num">F1</th><th class="num">Support</th>'
+                f'</tr></thead><tbody>{rows_html}</tbody></table></div></div>')
+    elif is_regression and best_eval:
+        residual_rows = [('Residual mean', best_eval.get('residual_mean')), ('Residual std', best_eval.get('residual_std')),
+                         ('MSE', best_eval.get('mse'))]
+        rows_html = ''.join(f'<tr><td>{l}</td><td class="num">{fmt(v)}</td></tr>' for l, v in residual_rows if v is not None)
+        if best_eval.get('n_test_samples') is not None:
+            rows_html += f'<tr><td>Test samples</td><td class="num">{int(best_eval["n_test_samples"]):,}</td></tr>'
+        detail_parts.append(f'<div><h3>Error analysis (test set)</h3><table><tbody>{rows_html}</tbody></table></div>')
+
+    details_html = (f'<section class="card"><h2>Best model details: {pretty(best_model)}</h2>'
+                    f'<div class="cols">{"".join(detail_parts)}</div></section>') if detail_parts else ''
+
+    # Recommendations
+    recs = []
+    for source in (as_list(evaluation.get('recommendations')),
+                   as_list((training.get('ai_insights') or {}).get('improvement_suggestions')),
+                   as_list((eda.get('insights') or {}).get('preprocessing_recommendations'))):
+        for item in source:
+            if item and item not in recs:
+                recs.append(item)
+    findings = as_list((eda.get('insights') or {}).get('key_findings'))
+    quality_issues = [f"{col}: {int(n):,} missing ({n / max(len(df), 1) * 100:.1f}%)"
+                      for col, n in df.isnull().sum().items() if n > 0]
+    if duplicates:
+        quality_issues.append(f"{duplicates:,} duplicate rows")
+    insight_cols = []
+    if findings:
+        insight_cols.append('<div><h3>Key findings</h3>' + bullet_list(findings) + '</div>')
+    if quality_issues:
+        insight_cols.append('<div><h3>Data quality issues</h3>' + bullet_list(quality_issues) + '</div>')
+    if recs:
+        insight_cols.append('<div><h3>Recommendations</h3>' + bullet_list(recs) + '</div>')
+    insights_html = (f'<section class="card"><h2>Insights &amp; recommendations</h2>'
+                     f'<div class="cols">{"".join(insight_cols)}</div></section>') if insight_cols else ''
+
+    # Pipeline steps
+    strategy = preprocessing.get('strategy') or {}
+    step_rows = []
+    if model_selection.get('rationale'):
+        step_rows.append(('Model selection', model_selection['rationale']))
+    if model_selection.get('recommended_models'):
+        step_rows.append(('Models evaluated', ', '.join(pretty_raw(m) for m in as_list(model_selection['recommended_models']))))
+    mv = strategy.get('missing_value_strategy') or {}
+    if mv:
+        step_rows.append(('Missing values', ', '.join(f'{k}: {v}' for k, v in mv.items())))
+    enc = strategy.get('encoding_strategy') or {}
+    if enc.get('columns'):
+        step_rows.append(('Encoding', f"{enc.get('method', '')} on {', '.join(map(str, enc['columns']))}"))
+    sc = strategy.get('scaling_strategy') or {}
+    if sc.get('columns'):
+        step_rows.append(('Scaling', f"{sc.get('method', '')} on {len(sc['columns'])} numeric columns"))
+    if strategy.get('columns_to_drop'):
+        step_rows.append(('Dropped columns', ', '.join(map(str, strategy['columns_to_drop']))))
+    if result.get('duration') is not None:
+        step_rows.append(('Total pipeline time', f"{float(result['duration']):.2f}s"))
+    pipeline_html = ''
+    if step_rows:
+        rows_html = ''.join(f'<tr><td><b>{esc(k)}</b></td><td style="white-space:normal">{esc(v)}</td></tr>' for k, v in step_rows)
+        pipeline_html = f'<section class="card"><h2>Pipeline steps</h2><table><tbody>{rows_html}</tbody></table></section>'
+
     # Target distribution
-    target_dist_html = ""
+    target_html = ''
     if target_column and target_column in df.columns:
-        target_counts = df[target_column].value_counts()
-        target_dist_html = f"""
-        <table class="table table-sm">
-            <thead><tr><th>Value</th><th>Count</th><th>Percentage</th></tr></thead>
-            <tbody>
-            {''.join(f'<tr><td>{val}</td><td>{count}</td><td>{count/len(df)*100:.1f}%</td></tr>' 
-                     for val, count in target_counts.items())}
-            </tbody>
-        </table>
-        """
-    
-    # Model results
-    model_html = ""
-    if run.get('result'):
-        results = run['result'].get('results', {})
-        training = results.get('training', {})
-        metrics = training.get('training_metrics', {})
-        best_model = training.get('best_model', '')
-        problem_type = run.get('result', {}).get('problem_type', 'classification')
-        is_regression = problem_type == 'regression'
-        
-        if metrics:
-            score_label = "R² Score" if is_regression else "Accuracy"
-            model_html = f"""
-            <table class="table table-striped table-sm">
-                <thead><tr><th>Model</th><th>CV {score_label}</th><th>Test {score_label}</th><th>Training Time</th><th>Status</th></tr></thead>
-                <tbody>
-            """
-            for name, m in metrics.items():
-                if isinstance(m, dict) and 'error' not in m:
-                    is_best = '⭐ Best' if name == best_model else ''
-                    cv_score = m.get('cv_score_mean', 0)
-                    test_score = m.get('test_score', 0)
-                    if is_regression:
-                        cv_display = f"{cv_score:.4f}"
-                        test_display = f"{test_score:.4f}"
-                    else:
-                        cv_display = f"{cv_score*100:.2f}%"
-                        test_display = f"{test_score*100:.2f}%"
-                    model_html += f"""
-                    <tr>
-                        <td><strong>{name.replace('_', ' ').title()}</strong></td>
-                        <td>{cv_display}</td>
-                        <td>{test_display}</td>
-                        <td>{m.get('training_time', 0):.3f}s</td>
-                        <td style="color: green;">{is_best}</td>
-                    </tr>
-                    """
-            model_html += "</tbody></table>"
-    
-    # Column info
-    column_info_html = """
-    <table class="table table-sm">
-        <thead><tr><th>Column</th><th>Type</th><th>Non-Null</th><th>Unique</th></tr></thead>
-        <tbody>
-    """
+        target = df[target_column]
+        if is_regression and np.issubdtype(target.dtype, np.number):
+            desc = target.describe()
+            stats = [('Mean', desc['mean']), ('Std', desc['std']), ('Min', desc['min']), ('25%', desc['25%']),
+                     ('Median', desc['50%']), ('75%', desc['75%']), ('Max', desc['max'])]
+            content = ('<table><thead><tr>' + ''.join(f'<th class="num">{l}</th>' for l, _ in stats) + '</tr></thead><tbody><tr>'
+                       + ''.join(f'<td class="num">{fmt(v, 2)}</td>' for _, v in stats) + '</tr></tbody></table>')
+        else:
+            counts = target.value_counts()
+            top = counts.max() or 1
+            content = ''.join(
+                f'<div class="bar-row"><div class="label" title="{esc(v)}">{esc(v)}</div>'
+                f'<div class="bar-track"><div class="bar-fill" style="width:{c / top * 100:.1f}%"></div></div>'
+                f'<div class="val">{c / len(df) * 100:.1f}%</div></div>'
+                for v, c in counts.head(20).items())
+            if len(counts) > 20:
+                content += f'<p class="muted">Showing top 20 of {len(counts)} classes.</p>'
+        target_html = f'<section class="card"><h2>Target: {esc(target_column)}</h2><div class="table-wrap">{content}</div></section>'
+
+    # Column information
+    outliers = ((eda.get('outliers') or {}).get('outliers_by_column')) or {}
+    column_rows = ''
     for col in df.columns:
-        column_info_html += f"""
-        <tr>
-            <td>{col}</td>
-            <td>{df[col].dtype}</td>
-            <td>{df[col].notna().sum()}</td>
-            <td>{df[col].nunique()}</td>
-        </tr>
-        """
-    column_info_html += "</tbody></table>"
-    
-    # Full HTML
-    html = f"""
-<!DOCTYPE html>
+        series = df[col]
+        n_missing = int(series.isna().sum())
+        role = ' <span class="badge accent">TARGET</span>' if col == target_column else ''
+        out = outliers.get(col, {})
+        out_cell = f"{out.get('count', 0)} ({out.get('percentage', 0):.1f}%)" if out else '—'
+        column_rows += (f'<tr><td>{esc(col)}{role}</td><td>{esc(series.dtype)}</td>'
+                        f'<td class="num">{n_missing:,} ({n_missing / max(len(df), 1) * 100:.1f}%)</td>'
+                        f'<td class="num">{series.nunique():,}</td><td class="num">{out_cell}</td></tr>')
+    columns_html = f"""
+    <section class="card">
+        <h2>Column overview</h2>
+        <div class="table-wrap"><table>
+            <thead><tr><th>Column</th><th>Type</th><th class="num">Missing</th><th class="num">Unique</th><th class="num">Outliers (IQR)</th></tr></thead>
+            <tbody>{column_rows}</tbody>
+        </table></div>
+    </section>
+    """
+
+    # Numeric statistics
+    numeric_html = ''
+    if not numeric_df.empty:
+        desc = numeric_df.describe().T
+        stat_cols = [('mean', 'Mean'), ('std', 'Std'), ('min', 'Min'), ('25%', '25%'), ('50%', 'Median'), ('75%', '75%'), ('max', 'Max')]
+        head = '<th>Column</th>' + ''.join(f'<th class="num">{l}</th>' for _, l in stat_cols)
+        body = ''.join(f'<tr><td>{esc(idx)}</td>' + ''.join(f'<td class="num">{fmt(row[k], 3)}</td>' for k, _ in stat_cols) + '</tr>'
+                       for idx, row in desc.iterrows())
+        numeric_html = (f'<section class="card"><h2>Numeric statistics</h2><div class="table-wrap"><table>'
+                        f'<thead><tr>{head}</tr></thead><tbody>{body}</tbody></table></div></section>')
+
+    # Visualizations from the EDA agent (base64 PNG), with a correlation table fallback
+    charts = eda.get('visualizations') or {}
+    chart_titles = [('target_distribution', 'Target distribution'), ('distributions', 'Feature distributions'),
+                    ('boxplots', 'Box plots (outliers)'), ('correlation_heatmap', 'Correlation heatmap')]
+    figures = ''.join(
+        f'<figure class="chart"><img alt="{title}" src="data:image/png;base64,{charts[key]}"><figcaption>{title}</figcaption></figure>'
+        for key, title in chart_titles if isinstance(charts.get(key), str) and charts.get(key))
+    corr_html = ''
+    if 'correlation_heatmap' not in charts and len(numeric_df.columns) >= 2:
+        corr = numeric_df.corr()
+        head = '<th></th>' + ''.join(f'<th class="num">{esc(c)}</th>' for c in corr.columns)
+        body = ''.join(
+            f'<tr><th>{esc(i)}</th>' + ''.join(
+                f'<td class="num" style="background: rgba(90,103,216,{abs(v) * 0.55:.2f})">{v:.2f}</td>' for v in row) + '</tr>'
+            for i, row in corr.iterrows())
+        corr_html = f'<h3>Correlation matrix</h3><div class="table-wrap"><table><thead><tr>{head}</tr></thead><tbody>{body}</tbody></table></div>'
+    charts_html = (f'<section class="card"><h2>Exploratory data analysis</h2>{figures}{corr_html}</section>'
+                   if figures or corr_html else '')
+
+    meta = [('Dataset', dataset_name or '—'), ('Target', target_column or '—'),
+            ('Problem type', (problem_type or 'unknown').title()), ('Generated', datetime.now().strftime('%Y-%m-%d %H:%M')),
+            ('Pipeline ID', pipeline_id)]
+    meta_html = ''.join(f'<span><b>{k}:</b> {esc(v)}</span>' for k, v in meta)
+
+    return f"""<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AutoDS Dashboard Report - {pipeline_id}</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-    <style>
-        body {{ background: #1a1a2e; color: #fff; font-family: 'Segoe UI', sans-serif; }}
-        .card {{ background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); margin-bottom: 1.5rem; }}
-        .card-header {{ background: rgba(255,255,255,0.05); border-bottom: 1px solid rgba(255,255,255,0.1); font-weight: 600; }}
-        .table {{ color: #fff; }}
-        .table-striped > tbody > tr:nth-of-type(odd) {{ background: rgba(255,255,255,0.02); }}
-        .stat-card {{ background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 12px; padding: 1.5rem; text-align: center; }}
-        .stat-value {{ font-size: 2rem; font-weight: bold; }}
-        h1, h2, h3 {{ color: #667eea; }}
-        .header {{ background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 2rem; margin-bottom: 2rem; }}
-        .header h1 {{ color: #fff; margin: 0; }}
-    </style>
+    <title>AutoDS Report - {esc(dataset_name or pipeline_id)}</title>
+    <style>{REPORT_CSS}</style>
 </head>
 <body>
-    <div class="header">
-        <div class="container">
-            <h1>🤖 AutoDS Pipeline Report</h1>
-            <p class="mb-0">Pipeline ID: {pipeline_id} | Generated: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}</p>
+    <header class="report">
+        <div class="wrap" style="padding-bottom:0">
+            <h1>AutoDS Analysis Report</h1>
+            <div class="meta">{meta_html}</div>
         </div>
-    </div>
-    
-    <div class="container">
-        <!-- Summary Stats -->
-        <div class="row mb-4">
-            <div class="col-md-3">
-                <div class="stat-card">
-                    <div class="stat-value">{rows:,}</div>
-                    <div>Rows</div>
-                </div>
-            </div>
-            <div class="col-md-3">
-                <div class="stat-card" style="background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);">
-                    <div class="stat-value">{cols}</div>
-                    <div>Columns</div>
-                </div>
-            </div>
-            <div class="col-md-3">
-                <div class="stat-card" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);">
-                    <div class="stat-value">{missing}</div>
-                    <div>Missing Values</div>
-                </div>
-            </div>
-            <div class="col-md-3">
-                <div class="stat-card" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);">
-                    <div class="stat-value">{memory_mb}</div>
-                    <div>Memory (MB)</div>
-                </div>
-            </div>
-        </div>
-        
-        <!-- Model Results -->
-        {f'''
-        <div class="card">
-            <div class="card-header">🏆 Model Performance</div>
-            <div class="card-body">{model_html}</div>
-        </div>
-        ''' if model_html else ''}
-        
-        <!-- Target Distribution -->
-        {f'''
-        <div class="card">
-            <div class="card-header">📊 Target Distribution: {target_column}</div>
-            <div class="card-body">{target_dist_html}</div>
-        </div>
-        ''' if target_dist_html else ''}
-        
-        <!-- Column Information -->
-        <div class="card">
-            <div class="card-header">📋 Column Information</div>
-            <div class="card-body">{column_info_html}</div>
-        </div>
-        
-        <!-- Numeric Statistics -->
-        {f'''
-        <div class="card">
-            <div class="card-header">📈 Numeric Statistics</div>
-            <div class="card-body">{numeric_stats_html}</div>
-        </div>
-        ''' if numeric_stats_html else ''}
-        
-        <!-- Correlation Matrix -->
-        {f'''
-        <div class="card">
-            <div class="card-header">🔗 Feature Correlations</div>
-            <div class="card-body" style="overflow-x: auto;">{corr_html}</div>
-        </div>
-        ''' if corr_html else ''}
-        
-        <div class="text-center text-muted py-4">
-            <p>Generated by AutoDS Pipeline | AI-Powered Data Science</p>
-        </div>
-    </div>
+    </header>
+    <main class="wrap">
+        <div class="kpis">{kpi_html}</div>
+        {summary_html}
+        {model_html}
+        {details_html}
+        {insights_html}
+        {target_html}
+        {columns_html}
+        {numeric_html}
+        {charts_html}
+        {pipeline_html}
+        <footer>Generated by AutoDS Pipeline</footer>
+    </main>
 </body>
 </html>
-    """
-    return html
+"""
 
 
 # Model Management Endpoints
@@ -1172,7 +1444,7 @@ def run_forecast():
         file.save(file_path)
         
         # Load data
-        df = pd.read_csv(file_path)
+        df = read_data_file(file_path)
         
         # Get parameters
         date_column = request.form.get('date_column')

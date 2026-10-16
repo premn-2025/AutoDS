@@ -469,9 +469,13 @@ Format as JSON with keys: key_findings, quality_issues, feature_suggestions, pre
                 ],
                 'quality_issues': list(quality_report['missing_values']['by_column'].keys()) if quality_report['missing_values']['by_column'] else [],
                 'preprocessing_recommendations': [
-                    "Handle missing values before training",
-                    "Consider scaling numeric features",
-                    "Encode categorical variables"
+                    rec for rec, applies in [
+                        ("Handle missing values before training", quality_report['missing_values']['total_missing'] > 0),
+                        ("Remove duplicate rows", quality_report['duplicates']['duplicate_rows'] > 0),
+                        ("Consider scaling numeric features", basic_stats['numeric_columns'] > 0),
+                        ("Encode categorical variables", basic_stats['categorical_columns'] > 0),
+                        ("Review or cap outliers", outliers.get('total_columns_with_outliers', 0) > 0)
+                    ] if applies
                 ]
             }
     
